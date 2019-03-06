@@ -2,29 +2,29 @@ CSCB58 Project Report: Winter 2019
 
 Team Member A
 -------------
-First Name: 
-Last Name:
-Student Number:
-UofT E-mail Address:
+First Name: Alexander
+Last Name: Ursu
+Student Number: 1004357199
+UofT E-mail Address: alexander.ursu@mail.utoronto.ca
 
 
 Team Member B
 -------------
-First Name: 
+First Name:
 Last Name:
 Student Number:
 UofT E-mail Address:
 
 Team Member C (Optional)
 -------------
-First Name: 
+First Name:
 Last Name:
 Student Number:
 UofT E-mail Address:
 
 Team Member D (Optional)
 -------------
-First Name: 
+First Name:
 Last Name:
 Student Number:
 UofT E-mail Address:
@@ -33,7 +33,7 @@ UofT E-mail Address:
 Project Plan
 --------
 
-Project Title: 
+Project Title: Flappy Bird
 
 
 Provide a one paragraph description of your project:
@@ -54,7 +54,7 @@ What is your backup plan if things don’t work out as planned?
 
 Weekly Reports
 --------------
-<In this space, provide a report each week of what worked and what didn't, and what (if any) changes were made to your proposal)>
+<In this space, provide a report each week of what worked and what didn't, and what (if any) changes were made to your proposal>
 
 
 [This is an example of a report where things didn't go so well.]
@@ -75,5 +75,4 @@ Make sure to document what you added on top of the existing work, especially if 
 
 Repo & Video
 ------------
-<At the end of the project, provide links to your code repository and presentation video (and passwords if not public>
-
+<At the end of the project, provide links to your code repository and presentation video (and passwords if not public)>
