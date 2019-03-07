@@ -9,10 +9,10 @@ UofT E-mail Address: alexander.ursu@mail.utoronto.ca
 
 Team Member B
 -------------
-First Name:
-Last Name:
-Student Number:
-UofT E-mail Address:
+First Name: Ahmed
+Last Name: Sirajuddin
+Student Number: 999963605
+UofT E-mail Address: ahmed.sirajuddin@mail.utoronto.ca
 
 Team Member C (Optional)
 -------------
@@ -32,10 +32,10 @@ UofT E-mail Address:
 Project Plan
 -------------
 
-Project Title: Flappy Bird
+Project Title: Flappy B58ird
 
 Provide a one paragraph description of your project:
-The project is a recreation of the famous mobile game Flappy Bird. Connected to the FPGA will be a keyboard and monitor. The space bar on the keyboard will propel the bird upwards, while the bird falls on its own. The goal is to make your way through oncoming obstacles, in which there will be a gap for the bird to fly through. A VGA connection is used to display the bird and obstacles on the monitor. A score is shown representing the amount of obstacles the bird has flown through. Main menu to start game, end game screen displays final score and takes player back to main menu.
+The project is a recreation of the famous mobile game Flappy Bird. It is titled Flappy B58ird (The 8 seen as a B) because we are recreating it in CSCB58. Connected to the FPGA will be a keyboard and monitor. The space bar on the keyboard will propel the bird upwards, while the bird falls on its own. The goal is to make your way through oncoming obstacles, in which there will be a gap for the bird to fly through. A VGA connection is used to display the bird and obstacles on the monitor. A score is shown representing the amount of obstacles the bird has flown through. Main menu to start game, end game screen displays final score and takes player back to main menu.
 
 What is your plan for the first week?
 Necessary aspects of the game implemented with FSM model. Drawing components on screen with VGA, oncoming obstacles represented by large shift registers and controlled by timer, bird jumping in place with keyboard.
