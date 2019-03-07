@@ -16,10 +16,10 @@ UofT E-mail Address: ahmed.sirajuddin@mail.utoronto.ca
 
 Team Member C (Optional)
 -------------
-First Name:
-Last Name:
-Student Number:
-UofT E-mail Address:
+First Name: Gabrian
+Last Name: Mak
+Student Number: 1003591400
+UofT E-mail Address: gabrian.mak@mail.utoronto.ca
 
 Team Member D (Optional)
 -------------
