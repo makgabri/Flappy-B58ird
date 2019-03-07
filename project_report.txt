@@ -23,10 +23,10 @@ UofT E-mail Address: gabrian.mak@mail.utoronto.ca
 
 Team Member D (Optional)
 -------------
-First Name:
-Last Name:
-Student Number:
-UofT E-mail Address:
+First Name: Kelson
+Last Name: Xie
+Student Number: 1004290037
+UofT E-mail Address: kelson.xie@mail.utoronto.ca
 
 
 Project Plan
