@@ -12,27 +12,25 @@ module birdy
     input [3:0] KEY;
 	 input [17:0] SW;
 	 output [17:0] LEDR;
-	 wire [17:0] y;
     //input in_y,
     //output in_y,
-	 assign y = LEDR;
-	 wire newClock;
 
+		assign LEDR[1] = 1'b1;
+		
     wire fixed_x;
     assign fixed_x = 8'd20;
 	 
 	 RateDivider rd(
 		.clk(CLOCK_50),
-		.enable(SW[4]),
-		.clear(SW[3:2]),
+		.enable(1'b1),
 		.out(newClock)
 	);
 	 
 	 control c1(
     .clk(newClock),
     .resetn(SW[16]),
-    .go(KEY[0]),
-    .ld_y(y)
+    .go(KEY[1]),
+    .ld_y(LEDR)
 	 );
 
 endmodule
@@ -69,16 +67,16 @@ module control(
     // Output logic aka all of our datapath control signals
     always @(*)
     begin: enable_signals
-        ld_y = 6'd8;
 		  
         case (current_state)
             S_FALL: begin
-                    ld_y = ld_y - speed;
-                    speed = speed + speed;
+							ld_y = 6'd8;
+                    //ld_y = ld_y - speed;
+                    //speed = speed + speed;
                 end
             S_FLAP: begin
-                    ld_y = ld_y + 8'd2;
-                    speed = 8'd1;
+                    ld_y = ld_y + 6'd2;
+                    speed = 6'd1;
                 end
             S_FLAP_WAIT: begin
                     ld_y = ld_y - speed;

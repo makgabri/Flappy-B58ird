@@ -1,7 +1,6 @@
-module RateDivider (clk, enable, clear, out);
+module RateDivider (clk, enable, out);
 	input clk;
 	input enable;
-	input [1:0] clear;
 	output [3:0] out;
 
 	wire [27:0] rate_div_out;
@@ -10,7 +9,6 @@ module RateDivider (clk, enable, clear, out);
 	twoeightbit_decrement_switch_load my_28(
 		.clk(clk),
 		.enable(enable),
-		.clear_b(clear[1]),
 		.q(rate_div_out)
 	);
 
@@ -19,40 +17,33 @@ module RateDivider (clk, enable, clear, out);
 	fivebit_increment my_4(
 		.clk(clk),
 		.enable(count_enable),
-		.clear_b(clear[0]),
 		.q(out)
 	);
 endmodule
 
-module twoeightbit_decrement_switch_load (clk, enable, clear_b, q);
+module twoeightbit_decrement_switch_load (clk, enable, q);
 	input clk;
 	input enable;
-	input clear_b;
 	reg [27:0] load_val;
 	output reg [27:0] q;
 
 	always @(posedge clk)
 	begin
-		if (clear_b == 1'b0)
-			q <= 1'b1;
-		else if (q == 0)
+		if (q == 0)
 			q <= 28'b0101111101011110000100000000;
 		else if (enable == 1'b1)
 			q <= q - 1'b1;
 	end
 endmodule
 
-module fivebit_increment (clk, enable, clear_b, q);
+module fivebit_increment (clk, enable, q);
 	input clk;
 	input enable;
-	input clear_b;
 	output reg [4:0] q;
 
 	always @(posedge clk)
 	begin
-		if (clear_b == 1'b0)
-			q <= 0;
-		else if (q == 5'b11111)
+		if (q == 5'b11111)
 			q <= 0;
 		else if (enable == 1'b1)
 			q <= q + 1'b1;
