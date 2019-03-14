@@ -35,39 +35,63 @@ Project Plan
 Project Title: Flappy B58ird
 
 Provide a one paragraph description of your project:
-The project is a recreation of the famous mobile game Flappy Bird. It is titled Flappy B58ird (The 8 seen as a B) because we are recreating it in CSCB58. Connected to the FPGA will be a keyboard and monitor. The space bar on the keyboard will propel the bird upwards, while the bird falls on its own. The goal is to make your way through oncoming obstacles, in which there will be a gap for the bird to fly through. A VGA connection is used to display the bird and obstacles on the monitor. A score is shown representing the amount of obstacles the bird has flown through. Main menu to start game, end game screen displays final score and takes player back to main menu.
+The project is a recreation of the famous mobile game Flappy Bird. It is titled
+Flappy B58ird (The 8 seen as a B) because we are recreating it in CSCB58.
+Connected to the FPGA will be a keyboard and monitor. The space bar on the
+keyboard will propel the bird upwards, while the bird falls on its own. The
+goal is to make your way through oncoming obstacles, in which there will be a
+gap for the bird to fly through. A VGA connection is used to display the bird
+and obstacles on the monitor. A score is shown representing the amount of
+obstacles the bird has flown through. Main menu to start game, end game screen
+displays final score and takes player back to main menu.
 
 What is your plan for the first week?
-Necessary aspects of the game implemented with FSM model. Drawing components on screen with VGA, oncoming obstacles represented by large shift registers and controlled by timer, bird jumping in place with keyboard.
+Necessary aspects of the game implemented with FSM model. Drawing components on
+screen with VGA, oncoming obstacles represented by large shift registers and
+controlled by timer, bird jumping in place with keyboard.
 
 What is your plan for the second week?
-Continuing on same FSM model, determine when the bird has collided with an obstacle, keep track of score.
+Continuing on same FSM model, determine when the bird has collided with an
+obstacle, keep track of score.
 
 What is your plan for the third week?
-On a higher-level FSM (or possibly within same FSM), have player navigate from main menu to playing the game, displaying their score on end game screen once the game is over, and returning them back to the main menu.
+On a higher-level FSM (or possibly within same FSM), have player navigate from
+main menu to playing the game, displaying their score on end game screen once
+the game is over, and returning them back to the main menu.
 
 What is your backup plan if things don’t work out as planned?
-Spend more time on basic gameplay aspects, just getting the bird the fly up and fall down, have obstacles approach the bird. Game may just start instantly when loaded up, game may just stop once the bird hits an obstacle.
+Spend more time on basic gameplay aspects, just getting the bird the fly up and
+fall down, have obstacles approach the bird. Game may just start instantly when
+loaded up, game may just stop once the bird hits an obstacle.
 
 
 Weekly Reports
 -------------
-<In this space, provide a report each week of what worked and what didn't, and what (if any) changes were made to your proposal>
 
-[This is an example of a report where things didn't go so well.]
 Week 1:
-We added and tested the sensors and the main FSM.
-The distance sensor we had intended to use didn't work as expected (wasn't precise enough at further distances, only seems to work accurately within 5-10cm), so instead we've decided to change the project to use a light sensor instead.
-Had trouble getting the FSM to work (kept getting stuck in state 101, took longer to debug than expected), so we may not be able to add the high score feature. We have updated that in the project description as an optional feature.
+We managed to work with a 40-bit wide shift-register and continuously draw its
+contents with the VGA, following our FSM. We ran short on time but wanted to
+instantiate many more of these registers and manage them all at once,
+essentially completing the obstacle portion of the game. This was left for
+later as we already have planned out how to easily scale up our current model.
+We created modules for a timer which can be used to regulate frame-rate and
+obstacle frequency, and a 30-bit wide shift register to represent the bird,
+modelled with another FSM. These pieces are to be incorporated in the next lab.
 
 
 References
 -------------
-<In this space clearly indicate all external sources used in this project. If you used anyone else's code (from previous B58 projects or other sources) clearly indicate what you used and where you found it. Usage of any material not credited in this space will be considered plagiarism. It is absolutely OK and expected to update this section as you progress in the projected.
+<In this space clearly indicate all external sources used in this project. If
+you used anyone else's code (from previous B58 projects or other sources)
+clearly indicate what you used and where you found it. Usage of any material
+not credited in this space will be considered plagiarism. It is absolutely OK
+and expected to update this section as you progress in the projected.
 
-Make sure to document what you added on top of the existing work, especially if you work with a previous project. What is it that YOU added?>
+Make sure to document what you added on top of the existing work, especially if
+you work with a previous project. What is it that YOU added?>
 
 
 Repo & Video
 -------------
-<At the end of the project, provide links to your code repository and presentation video (and passwords if not public)>
+<At the end of the project, provide links to your code repository and
+presentation video (and passwords if not public)>
