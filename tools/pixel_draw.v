@@ -16,11 +16,11 @@ module part_2
 		VGA_G,	 						//	VGA Green[9:0]
 		VGA_B,   						//	VGA Blue[9:0]
 		LEDR
-	);
+	);https://github.com/Alxander64/Flappy-B58ird.git
 
-	input			CLOCK_50;				//	50 MHz
-	input   [17:0]   SW;
-	input   [3:0]   KEY;
+	inhttps://github.com/Alxander64/Flappy-B58ird.gitLOCK_50;				//	50 MHz
+	inhttps://github.com/Alxander64/Flappy-B58ird.gitSW;
+	inhttps://github.com/Alxander64/Flappy-B58ird.gitEY;
 
 	// Declare your inputs and outputs here
 	// Do not change the following outputs
@@ -78,8 +78,216 @@ module part_2
 		.resetn(resetn),
 		.writeEn(writeEn),
 		.coordinate(SW[6:0]), 
-		.ld_x(ld_x),
-		.ld_y(ld_y),
+		.ld_x(ld_x),module datapath(
+    input clk,
+    input resetn, writeEn,
+    input [6:0] coordinate, 
+    input ld_x, ld_y,
+    output [7:0] x_out,
+	 output [6:0] y_out
+    );
+    
+    // input registers
+	 reg [3:0] count_xy;
+    reg [7:0] x; 
+	 reg [6:0] y;
+ 
+    // Registers a, b, c, x with respective input logic
+    always@(posedge clk) begin
+        if(!resetn) begin
+            x <= 8'd0; 
+            y <= 7'd0; 
+        end
+        else begin 
+            if(ld_x)
+                x <= {1'b0, coordinate}; // load x with padding
+            if(ld_y)
+                y <= coordinate; // load y
+        end
+    end
+	
+	// counter
+	always @(posedge clk) begin
+		if (!resetn)
+			count_xy <= 4'd0;
+		else if (writeEn)
+			count_xy <= count_xy + 4'd1;
+	end
+	
+	// set x,y colour out
+	assign x_out = x + count_xy[1:0];
+	assign y_out = y + count_xy[3:2];
+
+    
+endmodule
+
+module control(
+    input clk,
+    input resetn,
+    input go,
+
+    output reg  ld_x, ld_y, writeEn
+	 );
+
+    reg [3:0] current_state, next_state; 
+    
+    localparam  S_LOAD_X        = 3'd0,
+                S_LOAD_X_WAIT   = 3'd1,
+                S_LOAD_Y_COLOUR = 3'd2,
+                S_LOAD_Y_WAIT   = 3'd3,
+                S_DRAW_BOX      = 3'd4,
+					 S_DRAW_BOX_WAIT = 3'd5;
+    
+    // Next state logic aka our state table
+    always@(*)
+    begin: state_table 
+            case (current_state)
+                S_LOAD_X: next_state = go ? S_LOAD_X_WAIT : S_LOAD_X; // Loop in current state until value is input
+                S_LOAD_X_WAIT: next_state = go ? S_LOAD_X_WAIT : S_LOAD_Y_COLOUR; // Loop in current state until go signal goes low
+                S_LOAD_Y_COLOUR: next_state = go ? S_LOAD_Y_WAIT : S_LOAD_Y_COLOUR; // Loop in current state until value is input
+                S_LOAD_Y_WAIT: next_state = go ? S_LOAD_Y_WAIT : S_DRAW_BOX; // Loop in current state until go signal goes low
+                S_DRAW_BOX: next_state = go 	? S_DRAW_BOX_WAIT : S_DRAW_BOX; // Restart FSM
+					 S_DRAW_BOX_WAIT: next_state = go ? S_DRAW_BOX_WAIT : S_LOAD_X; // Loop in current state until go signal goes low
+					 //default: next_state = S_LOAD_X;`
+        endcase
+    end // state_table
+   
+
+    // Output logic aka all of our datapath control signals
+    always @(*)
+    begin: enable_signals
+        // By default make all our signals 0
+        ld_x = 1'b0;
+        ld_y = 1'b0;
+		  writeEn = 1'b0;
+		  
+        case (current_state)
+            S_LOAD_X: begin
+                ld_x = 1'b1;
+                end
+            S_LOAD_Y_COLOUR: begin
+                ld_y = 1'b1;
+                end
+            S_DRAW_BOX: begin
+                writeEn = 1'b1;
+                end
+        // default:    // don't need default since we already made sure all of our outputs were assigned a value at the start of the always block
+        endcase
+    end // enable_signals
+   
+    // current_state registers
+    always@(posedge clk)
+    begin: state_FFs
+        if(!resetn)
+            current_state <= S_LOAD_X;
+        else
+            current_state <= next_state;
+    end // state_FFS
+		.ld_y(ld_y),module datapath(
+    input clk,
+    input resetn, writeEn,
+    input [6:0] coordinate, 
+    input ld_x, ld_y,
+    output [7:0] x_out,
+	 output [6:0] y_out
+    );
+    
+    // input registers
+	 reg [3:0] count_xy;
+    reg [7:0] x; 
+	 reg [6:0] y;
+ 
+    // Registers a, b, c, x with respective input logic
+    always@(posedge clk) begin
+        if(!resetn) begin
+            x <= 8'd0; 
+            y <= 7'd0; 
+        end
+        else begin 
+            if(ld_x)
+                x <= {1'b0, coordinate}; // load x with padding
+            if(ld_y)
+                y <= coordinate; // load y
+        end
+    end
+	
+	// counter
+	always @(posedge clk) begin
+		if (!resetn)
+			count_xy <= 4'd0;
+		else if (writeEn)
+			count_xy <= count_xy + 4'd1;
+	end
+	
+	// set x,y colour out
+	assign x_out = x + count_xy[1:0];
+	assign y_out = y + count_xy[3:2];
+
+    
+endmodule
+
+module control(
+    input clk,
+    input resetn,
+    input go,
+
+    output reg  ld_x, ld_y, writeEn
+	 );
+
+    reg [3:0] current_state, next_state; 
+    
+    localparam  S_LOAD_X        = 3'd0,
+                S_LOAD_X_WAIT   = 3'd1,
+                S_LOAD_Y_COLOUR = 3'd2,
+                S_LOAD_Y_WAIT   = 3'd3,
+                S_DRAW_BOX      = 3'd4,
+					 S_DRAW_BOX_WAIT = 3'd5;
+    
+    // Next state logic aka our state table
+    always@(*)
+    begin: state_table 
+            case (current_state)
+                S_LOAD_X: next_state = go ? S_LOAD_X_WAIT : S_LOAD_X; // Loop in current state until value is input
+                S_LOAD_X_WAIT: next_state = go ? S_LOAD_X_WAIT : S_LOAD_Y_COLOUR; // Loop in current state until go signal goes low
+                S_LOAD_Y_COLOUR: next_state = go ? S_LOAD_Y_WAIT : S_LOAD_Y_COLOUR; // Loop in current state until value is input
+                S_LOAD_Y_WAIT: next_state = go ? S_LOAD_Y_WAIT : S_DRAW_BOX; // Loop in current state until go signal goes low
+                S_DRAW_BOX: next_state = go 	? S_DRAW_BOX_WAIT : S_DRAW_BOX; // Restart FSM
+					 S_DRAW_BOX_WAIT: next_state = go ? S_DRAW_BOX_WAIT : S_LOAD_X; // Loop in current state until go signal goes low
+					 //default: next_state = S_LOAD_X;`
+        endcase
+    end // state_table
+   
+
+    // Output logic aka all of our datapath control signals
+    always @(*)
+    begin: enable_signals
+        // By default make all our signals 0
+        ld_x = 1'b0;
+        ld_y = 1'b0;
+		  writeEn = 1'b0;
+		  
+        case (current_state)
+            S_LOAD_X: begin
+                ld_x = 1'b1;
+                end
+            S_LOAD_Y_COLOUR: begin
+                ld_y = 1'b1;
+                end
+            S_DRAW_BOX: begin
+                writeEn = 1'b1;
+                end
+        // default:    // don't need default since we already made sure all of our outputs were assigned a value at the start of the always block
+        endcase
+    end // enable_signals
+   
+    // current_state registers
+    always@(posedge clk)
+    begin: state_FFs
+        if(!resetn)
+            current_state <= S_LOAD_X;
+        else
+            current_state <= next_state;
+    end // state_FFS
 		.x_out(x),
 		.y_out(y)
     );

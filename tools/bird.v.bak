@@ -6,7 +6,7 @@ module birdy
 		LEDR,
         in_y,
         out_y
-	);
+	)
 
     input CLOCK_50;
     input [3:0] KEY;
@@ -15,15 +15,6 @@ module birdy
 
     wire fixed_x,
     assign fixed_x = 8'd20;
-	 
-	 control c1(
-    .clk(),
-    .resetn(),
-    .go(),
-    .in_y(),
-
-    .ld_y()
-	 );
 
 endmodule
 
