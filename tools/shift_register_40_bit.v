@@ -1,4 +1,4 @@
-module shift_register_40_bit.v(
+module shift_register_40_bit(
   input clk,
   input resetn,
   input data_in,
