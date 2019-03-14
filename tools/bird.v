@@ -4,25 +4,29 @@ module birdy
         KEY,
         SW,
 		LEDR,
-        in_y,
-        out_y
+        //in_y,
+        //out_y
 	);
 
     input CLOCK_50;
     input [3:0] KEY;
-    input in_y,
-    output in_y,
+	 input [17:0] SW;
+	 output [17:0] LEDR;
+	 wire [17:0] y;
+    //input in_y,
+    //output in_y,
+	 assign y = LEDR;
 
     wire fixed_x,
     assign fixed_x = 8'd20;
 	 
 	 control c1(
     .clk(),
-    .resetn(),
-    .go(),
-    .in_y(),
+    .resetn(SW[16]),
+    .go(KEY[0]),
+    .in_y(y),
 
-    .ld_y()
+    .ld_y(y)
 	 );
 
 endmodule
@@ -61,8 +65,7 @@ module control(
     // Output logic aka all of our datapath control signals
     always @(*)
     begin: enable_signals
-        // By default make all our signals 0=
-        ld_y = 8'd60;
+        ld_y = 6'd8;
 		  
         case (current_state)
             S_FALL: begin
