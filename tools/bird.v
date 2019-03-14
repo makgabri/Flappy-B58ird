@@ -16,16 +16,22 @@ module birdy
     //input in_y,
     //output in_y,
 	 assign y = LEDR;
+	 wire newClock;
 
-    wire fixed_x,
+    wire fixed_x;
     assign fixed_x = 8'd20;
 	 
+	 RateDivider rd(
+		.clk(CLOCK_50),
+		.enable(SW[4]),
+		.clear(SW[3:2]),
+		.out(newClock)
+	);
+	 
 	 control c1(
-    .clk(),
+    .clk(newClock),
     .resetn(SW[16]),
     .go(KEY[0]),
-    .in_y(y),
-
     .ld_y(y)
 	 );
 
@@ -35,20 +41,18 @@ module control(
     input clk,
     input resetn,
     input go,
-    input in_y,
 
     output reg ld_y
 	 );
 
-    assign ld_y = in_y;
-
     reg [2:0] current_state, next_state; 
-    wire fixed_x,
+    wire fixed_x;
     assign fixed_x = 8'd20;
     reg speed = 8'd1;
     
     localparam  S_FALL        = 3'd0,
-                S_FLAP        = 3'd1;
+                S_FLAP        = 3'd1,
+                S_FLAP_WAIT   = 3'd2;
     
     // Next state logic aka our state table
     always@(*)
@@ -71,13 +75,12 @@ module control(
             S_FALL: begin
                     ld_y = ld_y - speed;
                     speed = speed + speed;
-            end
                 end
             S_FLAP: begin
                     ld_y = ld_y + 8'd2;
                     speed = 8'd1;
                 end
-            S_FALL_WAIT: begin
+            S_FLAP_WAIT: begin
                     ld_y = ld_y - speed;
                     speed = speed + speed;
                 end
@@ -93,3 +96,5 @@ module control(
         else
             current_state <= next_state;
     end // state_FFS
+endmodule
+	 
