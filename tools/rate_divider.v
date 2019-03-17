@@ -1,6 +1,8 @@
 module RateDivider (clk, enable, out);
+
 	input clk;
 	input enable;
+
 	output [3:0] out;
 
 	wire [27:0] rate_div_out;
@@ -19,12 +21,16 @@ module RateDivider (clk, enable, out);
 		.enable(count_enable),
 		.q(out)
 	);
+
 endmodule
 
 module twoeightbit_decrement_switch_load (clk, enable, q);
+
 	input clk;
 	input enable;
+
 	reg [27:0] load_val;
+
 	output reg [27:0] q;
 
 	always @(posedge clk)
@@ -34,11 +40,14 @@ module twoeightbit_decrement_switch_load (clk, enable, q);
 		else if (enable == 1'b1)
 			q <= q - 1'b1;
 	end
+
 endmodule
 
 module fivebit_increment (clk, enable, q);
+
 	input clk;
 	input enable;
+
 	output reg [4:0] q;
 
 	always @(posedge clk)
@@ -48,4 +57,5 @@ module fivebit_increment (clk, enable, q);
 		else if (enable == 1'b1)
 			q <= q + 1'b1;
 	end
+
 endmodule

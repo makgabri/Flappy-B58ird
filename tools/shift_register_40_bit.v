@@ -2,6 +2,7 @@ module shift_register_40_bit(
   input clk,
   input resetn,
   input data_in,
+
   output bit_out,
   output reg [39:0] forty_bit_out
   );
@@ -21,4 +22,5 @@ module shift_register_40_bit(
       forty_bit_out <= 40'b0;
     end
   end
+
 endmodule
