@@ -60,6 +60,19 @@ module part2(
 	wire [39:0] obstacle_data;
 	wire test_bit_out;
 
+	/* Should be able to work with this, needs some testing to see behaviour
+	wire [29:0] test_bit_out;
+	wire [1199:0] obstacle_data;
+
+	shift_register_40_bit all_regs[29:0] (
+		.clk(frame),
+		.resetn(SW[16]),
+		.data_in(SW[0]),
+		.bit_out(test_bit_out),
+		.forty_bit_out(obstacle_data)
+	);
+	*/
+
 	shift_register_40_bit s1 (
 		.clk(frame),
 		.resetn(SW[16]),
@@ -68,22 +81,23 @@ module part2(
 		.forty_bit_out(obstacle_data)
 		);
 
-	 reg [5:0] state;
-	 reg [7:0] x, y, feed_increment;
-	 reg [7:0] border_x, border_y;
-	 reg [2:0] colour;
-	 reg [17:0] drawing, drawing_x;
-	 reg [3:0] pixel_counter;
-	 reg [5:0] bit_counter;
-	 wire frame;
+	reg [5:0] state;
+	reg [7:0] x, y, feed_increment;
+	reg [7:0] border_x, border_y;
+	reg [2:0] colour;
+	reg [17:0] drawing, drawing_x;
+	reg [3:0] pixel_counter;
+	reg [5:0] bit_counter;
+	// reg [4:0] reg_counter;
+	wire frame;
 
-	 assign LEDR[7:0] = obstacle_data[7:0];
+	assign LEDR[7:0] = obstacle_data[7:0];
 
-	 localparam  	CLEAR_SCREEN = 6'b000000,
-                INIT_FLOOR   = 6'b000001,
-								INIT_CIELING = 6'b000010,
-								DRAW_SEED 	 = 6'b000011,
-					 			DRAW_PIXEL   = 6'b011001;
+	localparam  CLEAR_SCREEN = 6'b000000,
+              INIT_FLOOR   = 6'b000001,
+							INIT_CIELING = 6'b000010,
+							DRAW_SEED 	 = 6'b000011,
+					 		DRAW_PIXEL   = 6'b011001;
 
 	clock(.clock(CLOCK_50), .clk(frame));
 
@@ -144,8 +158,10 @@ module part2(
 				DRAW_SEED: begin
 					x = border_x + pixel_counter[3:2] - (3'b100 * bit_counter);
 					y = border_y + pixel_counter[1:0];
+					// y = border_y + pixel_counter[1:0] + (3'b100 * reg_counter);
 
 					if (obstacle_data[bit_counter] == 1'b1) colour = 3'b011;
+					// if (obstacle_data[(((bit_counter + 1'b1) * (reg_counter + 1'b1)) - 1'b1)] == 1'b1) colour = 3'b011;
 					else colour = 3'b000;
 
 					if (pixel_counter == 4'b1111) begin
@@ -154,7 +170,12 @@ module part2(
 					end
 					else pixel_counter = pixel_counter + 1'b1;
 
-					if (bit_counter == 6'b101000) bit_counter = 6'b000000;
+					if (bit_counter == 6'b101000) begin
+						bit_counter = 6'b000000;
+						// reg_counter = reg_counter + 5'b00001;
+					end
+
+					// if (reg_counter == 5'b11110) reg_counter = 5'b00000;
 				end
       endcase
 	end
@@ -190,21 +211,21 @@ endmodule
 
 module clock(input clock, output clk);
 
-reg [19:0] frame_counter;
-reg frame;
+	reg [19:0] frame_counter;
+	reg frame;
 
-always@(posedge clock)
-begin
-	if (frame_counter == 20'b00000000000000000000) begin
-		frame_counter = 20'b1011111010111100001000000;
-		frame = 1'b1;
+	always@(posedge clock)
+	begin
+		if (frame_counter == 20'b00000000000000000000) begin
+			frame_counter = 20'b1011111010111100001000000;
+			frame = 1'b1;
+		end
+  	else begin
+			frame_counter = frame_counter - 1'b1;
+			frame = 1'b0;
+		end
 	end
-  else begin
-		frame_counter = frame_counter - 1'b1;
-		frame = 1'b0;
-	end
-end
 
-assign clk = frame;
+	assign clk = frame;
 
 endmodule
