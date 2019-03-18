@@ -60,6 +60,41 @@ module part2(
 	wire [39:0] obstacle_data;
 	wire test_bit_out;
 
+	/* Ahmed - 3:20pm monday
+	data_in = {1111000011110000111100001111000011110000};
+
+	module shift_register_40_bit (
+		input clk,
+		input resetn,
+		input data_in,
+
+		output reg bit_out,
+		output reg [39:0] forty_bit_out
+		);
+
+		// pushes data_in values all the time. loops. 
+		// so we do not need to do it ourself with SW
+
+		always @(posedge clk)
+		begin
+			if (!resetn) begin
+			bit_out = forty_bit_out[0];
+			// put in the 39th val of data_in all the time
+			forty_bit_out <= {forty_bit_out[38:0], data_in[counter]};
+			if counter == 39
+				counter = 0
+			else
+				counter = counter + 1
+			end
+			else begin
+			bit_out = 1'b0;
+			forty_bit_out <= 40'b0;
+			end
+		end
+
+		endmodule
+	*/
+
 	/* Should be able to work with this, needs some testing to see behaviour
 	wire [29:0] test_bit_out;
 	wire [1199:0] obstacle_data;
