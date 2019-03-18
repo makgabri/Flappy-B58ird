@@ -93,3 +93,100 @@ module control(
   end // state_FFS
 
 endmodule
+
+	/*
+	Ahmed. Bird.
+	drawfall draws, then falls etc
+	drawrise draws, then rises. 3 times. then goes to drawfall/
+
+	default is init, which draws the bird.
+	bird_x and bird_y should be initial position of bird.
+	bird_x does not change. y goes up and down.
+	
+	INIT_BIRD: begin
+		if birdcounter < 2
+			colour = green;
+			x = bird_x + pixel_counter[3:2];
+			y = bird_y + pixel_counter[1:0];
+			
+
+			if (pixel_counter == 4'b1111) begin
+				pixel_counter = 4'b0000;
+				bird_y += 4;
+				birdcounter ++;
+			end
+			else pixel_counter = pixel_counter + 1'b1;
+		else
+			state = drawfall
+	end
+
+	drawrise:
+		// erase and go up 4
+		if rise == false and counter < 3:
+			// erase current
+			colour = black;
+			x = bird_x + pixel_counter[3:2];
+			y = bird_y + pixel_counter[1:0];
+			
+
+			if (pixel_counter == 4'b1111) begin
+				pixel_counter = 4'b0000;
+				bird_y += 4;
+				rise = true;
+			end
+			else pixel_counter = pixel_counter + 1'b1;
+
+		// draw
+		else if rise == true and couter < 3: 
+			colour = green;
+			x = bird_x + pixel_counter[3:2];
+			y = bird_y + pixel_counter[1:0];
+				
+
+			if (pixel_counter == 4'b1111) begin
+				pixel_counter = 4'b0000;
+				counter ++;
+			end
+			else pixel_counter = pixel_counter + 1'b1;
+		else:
+			counter = 0;
+			rise = false;
+			fall = true;
+			state = drawfall;
+
+
+
+	drawfall:
+		counter = 0;
+		rise = false;
+		if fall == false:
+			// draw
+			colour = green;
+			x = bird_x + pixel_counter[3:2];
+			y = bird_y + pixel_counter[1:0];
+			
+
+			if (pixel_counter == 4'b1111) begin
+				pixel_counter = 4'b0000;
+				fall = true;
+			end
+			else pixel_counter = pixel_counter + 1'b1;
+
+		// erase and move down 4
+		else if fall == true: 
+			// erase current
+			colour = black;
+			x = bird_x + pixel_counter[3:2];
+			y = bird_y + pixel_counter[1:0];
+			
+
+			if (pixel_counter == 4'b1111) begin
+				pixel_counter = 4'b0000;
+				bird_y -=4;
+				fall = false;
+			end
+			else pixel_counter = pixel_counter + 1'b1;
+
+
+	default: initbird
+	*/
