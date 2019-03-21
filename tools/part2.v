@@ -1,6 +1,6 @@
 // Part 2 skeleton
 
-module part2(
+module project(
 		CLOCK_50,						//	On Board 50 MHz
 		// Your inputs and outputs here
     KEY,
@@ -57,8 +57,8 @@ module part2(
 	defparam VGA.BITS_PER_COLOUR_CHANNEL = 1;
 	defparam VGA.BACKGROUND_IMAGE = "black.mif";
 
-	wire [39:0] obstacle_data;
-	wire test_bit_out;
+	// wire [39:0] obstacle_data;
+	// wire test_bit_out;
 
 	/* Ahmed - 3:20pm monday
 	data_in = {1111000011110000111100001111000011110000};
@@ -95,7 +95,7 @@ module part2(
 		endmodule
 	*/
 
-	/* Should be able to work with this, needs some testing to see behaviour
+	// Should be able to work with this, needs some testing to see behaviour
 	wire [29:0] test_bit_out;
 	wire [1199:0] obstacle_data;
 
@@ -106,8 +106,8 @@ module part2(
 		.bit_out(test_bit_out),
 		.forty_bit_out(obstacle_data)
 	);
-	*/
 
+	/*frame
 	shift_register_40_bit s1 (
 		.clk(frame),
 		.resetn(SW[16]),
@@ -115,6 +115,7 @@ module part2(
 		.bit_out(test_bit_out),
 		.forty_bit_out(obstacle_data)
 		);
+	*/
 
 	reg [5:0] state;
 	reg [7:0] x, y, feed_increment;
@@ -123,10 +124,10 @@ module part2(
 	reg [17:0] drawing, drawing_x;
 	reg [3:0] pixel_counter;
 	reg [5:0] bit_counter;
-	// reg [4:0] reg_counter;
+	reg [4:0] reg_counter;
 	wire frame;
 
-	assign LEDR[7:0] = obstacle_data[7:0];
+	assign LEDR[7:0] = obstacle_data[39:31];
 
 	localparam  CLEAR_SCREEN = 6'b000000,
               INIT_FLOOR   = 6'b000001,
@@ -185,18 +186,18 @@ module part2(
 						drawing_x = 8'b00000000;
 						bit_counter = 6'b000000;
 						border_x = 8'd156;
-					  border_y = 8'd40;
+					   border_y = 8'd0;
 						state = DRAW_SEED;
 					end
 				end
 
 				DRAW_SEED: begin
 					x = border_x + pixel_counter[3:2] - (3'b100 * bit_counter);
-					y = border_y + pixel_counter[1:0];
-					// y = border_y + pixel_counter[1:0] + (3'b100 * reg_counter);
+					// y = border_y + pixel_counter[1:0];
+					y = border_y + pixel_counter[1:0] + (3'b100 * reg_counter);
 
-					if (obstacle_data[bit_counter] == 1'b1) colour = 3'b011;
-					// if (obstacle_data[(((bit_counter + 1'b1) * (reg_counter + 1'b1)) - 1'b1)] == 1'b1) colour = 3'b011;
+					// if (obstacle_data[bit_counter] == 1'b1) colour = 3'b011;
+					if (obstacle_data[(((bit_counter + 1'b1) * (reg_counter + 1'b1)) - 1'b1)] == 1'b1) colour = 3'b011;
 					else colour = 3'b000;
 
 					if (pixel_counter == 4'b1111) begin
@@ -207,10 +208,10 @@ module part2(
 
 					if (bit_counter == 6'b101000) begin
 						bit_counter = 6'b000000;
-						// reg_counter = reg_counter + 5'b00001;
+						reg_counter = reg_counter + 5'b00001;
 					end
 
-					// if (reg_counter == 5'b11110) reg_counter = 5'b00000;
+					if (reg_counter == 5'b11110) reg_counter = 5'b00000;
 				end
       endcase
 	end
