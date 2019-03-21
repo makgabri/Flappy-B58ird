@@ -1,28 +1,34 @@
 module birdy(
 	CLOCK_50,						//	On Board 50 MHz
 	KEY,
-   SW,
+  SW,
 	LEDR,
   //in_y,
   //out_y
 	);
 
 	input CLOCK_50;
-   input [3:0] KEY;
+  input [3:0] KEY;
 	input [17:0] SW;
 	output [17:0] LEDR;
-   //input in_y,
-   //output in_y,
-	
-	wire newClock;
-   wire fixed_x;
-   assign fixed_x = 8'd20;
+  //input in_y,
+  //output in_y,
 
-	clock clock1(.clock(CLOCK_50),
-			.clk(newClock));
+	assign LEDR[1] = 1'b1;
+
+  wire fixed_x;
+  assign fixed_x = 8'd20;
+
+// Rate Divider attempting to send a clock cycle every 0.5 seconds
+// but isn't working
+	RateDivider rd(
+		.clk(CLOCK_50),
+		.enable(1'b1),
+		.out(newClock)
+	);
 
 	control c1(
-	 .clk(newClock),
+		.clk(newClock),
     .resetn(SW[16]),
     .go(KEY[1]),
     .ld_y(LEDR)
@@ -35,7 +41,7 @@ module control(
 	input resetn,
 	input go,
 
-	//output reg ld_x,
+	output reg ld_x,
 	output reg ld_y
 	);
 
@@ -54,8 +60,8 @@ module control(
   begin: state_table
 		case (current_state)
 			S_FALL: next_state = go ? S_FLAP : S_FALL; // Natural State is bird falling
-			S_FLAP: next_state = go ? S_FLAP_WAIT : S_FALL; // On GO make bird fly 2 pixels
-			S_FLAP_WAIT: next_state = go ? S_FLAP_WAIT : S_FALL; // Makes sure player doesn't hold button to fly up non-stop
+      S_FLAP: next_state = go ? S_FLAP_WAIT : S_FALL; // On GO make bird fly 2 pixels
+      S_FLAP_WAIT: next_state = go ? S_FLAP_WAIT : S_FALL; // Makes sure player doesn't hold button to fly up non-stop
 			default: next_state = S_FALL;
     endcase
   end // state_table
@@ -67,20 +73,27 @@ module control(
 			S_FALL: begin
 				// Decrease speed and increase gravity by *2 every clock cycle
         ld_y = ld_y - speed;
+				// Increase gravity every clock cycle by *2
         speed = speed + speed;
       end
       S_FLAP: begin
-				// Increase gravity every clock cycle by *2
-				// erase current, set new y then draw bird and reset gravit
+				// erase current, set new y then draw bird and reset gravity
+				color = black
 				ld_y = ld_y + 6'd2;
-				speed = 6'd1;
+				color = green
+        speed = 6'd1;
       end
 			S_FLAP_WAIT: begin
 				// Similar to fall state but need this state to prevent holding fly
 				ld_y = ld_y - speed;
-				speed = speed + speed;
+        speed = speed + speed;
       end
-      //default:
+      default: begin
+				// Set bird to green in middle
+				ld_y = 6'd25
+				speed = 8'd1
+				color = green
+			end
     endcase
   end // enable_signals
 
@@ -95,30 +108,9 @@ module control(
 
 endmodule
 
-module clock(input clock, output clk);
-
-	reg [19:0] frame_counter;
-	reg frame;
-
-	always@(posedge clock)
-	begin
-		if (frame_counter == 20'b00000000000000000000) begin
-			frame_counter = 20'b1011111010111100001000000;
-			frame = 1'b1;
-		end
-  	else begin
-			frame_counter = frame_counter - 1'b1;
-			frame = 1'b0;
-		end
-	end
-
-	assign clk = frame;
-
-endmodule
 	/*
 	Ahmed. Bird.
-	drawfall draws, then fal
-				//color = blackls etc
+	drawfall draws, then falls etc
 	drawrise draws, then rises. 3 times. then goes to drawfall/
 
 	default is init, which draws the bird.
