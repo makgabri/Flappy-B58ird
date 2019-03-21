@@ -19,6 +19,8 @@ module birdy(
   wire fixed_x;
   assign fixed_x = 8'd20;
 
+// Rate Divider attempting to send a clock cycle every 0.5 seconds
+// but isn't working
 	RateDivider rd(
 		.clk(CLOCK_50),
 		.enable(1'b1),
@@ -39,12 +41,14 @@ module control(
 	input resetn,
 	input go,
 
+	output reg ld_x,
 	output reg ld_y
 	);
 
 	reg [2:0] current_state, next_state;
-  wire fixed_x;
-  assign fixed_x = 8'd20;
+	// Thought x was fixed???
+  // wire fixed_x;
+  // assign fixed_x = 8'd20;
   reg speed = 8'd1;
 
 	localparam  S_FALL        = 3'd0,
@@ -57,7 +61,7 @@ module control(
 		case (current_state)
 			S_FALL: next_state = go ? S_FLAP : S_FALL; // Natural State is bird falling
       S_FLAP: next_state = go ? S_FLAP_WAIT : S_FALL; // On GO make bird fly 2 pixels
-      S_FLAP_WAIT: next_state = go ? S_FLAP_WAIT : S_FALL; // On GO make bird fly 2 pixels
+      S_FLAP_WAIT: next_state = go ? S_FLAP_WAIT : S_FALL; // Makes sure player doesn't hold button to fly up non-stop
 			default: next_state = S_FALL;
     endcase
   end // state_table
@@ -67,19 +71,29 @@ module control(
   begin: enable_signals
 		case (current_state)
 			S_FALL: begin
-				ld_y = 6'd8;
-        //ld_y = ld_y - speed;
-        //speed = speed + speed;
+				// Decrease speed and increase gravity by *2 every clock cycle
+        ld_y = ld_y - speed;
+				// Increase gravity every clock cycle by *2
+        speed = speed + speed;
       end
       S_FLAP: begin
+				// erase current, set new y then draw bird and reset gravity
+				color = black
 				ld_y = ld_y + 6'd2;
+				color = green
         speed = 6'd1;
       end
 			S_FLAP_WAIT: begin
+				// Similar to fall state but need this state to prevent holding fly
 				ld_y = ld_y - speed;
         speed = speed + speed;
       end
-      // default:    // don't need default since we already made sure all of our outputs were assigned a value at the start of the always block
+      default: begin
+				// Set bird to green in middle
+				ld_y = 6'd25
+				speed = 8'd1
+				color = green
+			end
     endcase
   end // enable_signals
 
