@@ -57,9 +57,6 @@ module project(
 	defparam VGA.BITS_PER_COLOUR_CHANNEL = 1;
 	defparam VGA.BACKGROUND_IMAGE = "black.mif";
 
-	// wire [39:0] obstacle_data;
-	// wire test_bit_out;
-
 	/* Ahmed - 3:20pm monday
 	data_in = {1111000011110000111100001111000011110000};
 
@@ -95,27 +92,16 @@ module project(
 		endmodule
 	*/
 
-	// Should be able to work with this, needs some testing to see behaviour
 	wire [29:0] test_bit_out;
 	wire [1199:0] obstacle_data;
 
 	shift_register_40_bit all_regs[29:0] (
-		.clk(frame),
+		.clk(SW[17]),
 		.resetn(SW[16]),
 		.data_in(SW[0]),
 		.bit_out(test_bit_out),
 		.forty_bit_out(obstacle_data)
 	);
-
-	/*frame
-	shift_register_40_bit s1 (
-		.clk(frame),
-		.resetn(SW[16]),
-		.data_in(SW[0]),
-		.bit_out(test_bit_out),
-		.forty_bit_out(obstacle_data)
-		);
-	*/
 
 	reg [5:0] state;
 	reg [7:0] x, y, feed_increment;
@@ -127,7 +113,7 @@ module project(
 	reg [4:0] reg_counter;
 	wire frame;
 
-	assign LEDR[7:0] = obstacle_data[39:31];
+	assign LEDR[7:0] = test_bit_out[7:0];
 
 	localparam  CLEAR_SCREEN = 6'b000000,
               INIT_FLOOR   = 6'b000001,
@@ -175,7 +161,7 @@ module project(
 				INIT_CIELING: begin
 					if (drawing < 8'b10100000) begin
 						border_x = 8'd0;
-					  border_y = 8'd10;
+					   border_y = 8'd10;
 						x = border_x + drawing;
 						y = border_y + 1'b0;
 						drawing = drawing + 1'b1;
@@ -193,25 +179,24 @@ module project(
 
 				DRAW_SEED: begin
 					x = border_x + pixel_counter[3:2] - (3'b100 * bit_counter);
-					// y = border_y + pixel_counter[1:0];
 					y = border_y + pixel_counter[1:0] + (3'b100 * reg_counter);
-
-					// if (obstacle_data[bit_counter] == 1'b1) colour = 3'b011;
-					if (obstacle_data[(((bit_counter + 1'b1) * (reg_counter + 1'b1)) - 1'b1)] == 1'b1) colour = 3'b011;
+					
+					if (obstacle_data[(bit_counter + (6'b101000 * reg_counter))] == 1'b1) colour = 3'b011;
 					else colour = 3'b000;
-
+					
 					if (pixel_counter == 4'b1111) begin
 						pixel_counter = 4'b0000;
-						bit_counter = bit_counter + 6'b000001;
+						bit_counter = bit_counter + 1'b1;
 					end
 					else pixel_counter = pixel_counter + 1'b1;
 
 					if (bit_counter == 6'b101000) begin
 						bit_counter = 6'b000000;
-						reg_counter = reg_counter + 5'b00001;
+						reg_counter = reg_counter + 1'b1;
 					end
 
-					if (reg_counter == 5'b11110) reg_counter = 5'b00000;
+					if (reg_counter == 5'b11110)
+						reg_counter = 5'b00000;
 				end
       endcase
 	end
@@ -234,7 +219,7 @@ module shift_register_40_bit (
   always @(posedge clk)
   begin
     if (!resetn) begin
-      bit_out = forty_bit_out[0];
+      bit_out = forty_bit_out[39];
       forty_bit_out <= {forty_bit_out[38:0], data_in};
     end
     else begin

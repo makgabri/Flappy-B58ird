@@ -78,6 +78,12 @@ We created modules for a timer which can be used to regulate frame-rate and
 obstacle frequency, and a 30-bit wide shift register to represent the bird,
 modelled with another FSM. These pieces are to be incorporated in the next lab.
 
+Week 2:
+Able to instantiate 30 of our 40-bit shift registers, but have trouble drawing
+every bit to the screen in the proper position. Work done on the bird module,
+but ran into difficulties with other sub-modules like the rate divider. Will
+try to come to extra lab hours to catch up.
+
 
 References
 -------------
