@@ -1,4 +1,4 @@
-module birdy(
+module Birdy(
 	CLOCK_50,						//	On Board 50 MHz
 	KEY,
    SW,
@@ -16,6 +16,8 @@ module birdy(
 	
 	wire newClock;
    wire fixed_x;
+	wire [6:0] toLEDS;
+	assign LEDR[6:0] = toLEDS[6:0];
    assign fixed_x = 8'd20;
 
 	clock clock1(.clock(CLOCK_50),
@@ -25,7 +27,7 @@ module birdy(
 	 .clk(newClock),
     .resetn(SW[16]),
     .go(KEY[1]),
-    .ld_y(LEDR)
+    .ld_y(toLEDS)
 	 );
 
 endmodule
@@ -36,7 +38,7 @@ module control(
 	input go,
 
 	//output reg ld_x,
-	output reg ld_y
+	output reg [6:0] ld_y
 	);
 
 	reg [2:0] current_state, next_state;
@@ -44,7 +46,6 @@ module control(
   // wire fixed_x;
   // assign fixed_x = 8'd20;
   reg speed = 8'd1;
-
 	localparam  S_FALL        = 3'd0,
               S_FLAP        = 3'd1,
               S_FLAP_WAIT   = 3'd2;
@@ -72,7 +73,7 @@ module control(
       S_FLAP: begin
 				// Increase gravity every clock cycle by *2
 				// erase current, set new y then draw bird and reset gravit
-				ld_y = ld_y + 6'd2;
+				ld_y = ld_y + 6'd4;
 				speed = 6'd1;
       end
 			S_FLAP_WAIT: begin
