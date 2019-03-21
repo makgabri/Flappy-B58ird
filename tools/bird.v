@@ -1,54 +1,41 @@
-module Birdy(
-	CLOCK_50,						//	On Board 50 MHz
-	KEY,
-   SW,
-	LEDR,
-  //in_y,
-  //out_y
-	);
+module Birdy(CLOCK_50, KEY, SW, LEDR);
 
 	input CLOCK_50;
-   input [3:0] KEY;
+    input [3:0] KEY;
 	input [17:0] SW;
 	output [17:0] LEDR;
-   //input in_y,
-   //output in_y,
-	
+    //input in_y,
+    //output in_y,
+
+    //wire fixed_x;
+    //assign fixed_x = 8'd20;
 	wire newClock;
-   wire fixed_x;
 	wire [6:0] toLEDS;
 	assign LEDR[6:0] = toLEDS[6:0];
-   assign fixed_x = 8'd20;
 
-	clock clock1(.clock(CLOCK_50),
-			.clk(newClock));
+	clock clock1(.clock(CLOCK_50), .clk(newClock));
 
 	control c1(
 	 .clk(newClock),
-    .resetn(SW[16]),
-    .go(KEY[1]),
-    .ld_y(toLEDS)
-	 );
+     .resetn(SW[16]),
+     .go(KEY[1]),
+     .ld_y(toLEDS)
+	);
 
 endmodule
 
-module control(
+module control(clk, resetn, go, ld_y);
 	input clk,
 	input resetn,
 	input go,
 
-	//output reg ld_x,
 	output reg [6:0] ld_y
-	);
 
 	reg [2:0] current_state, next_state;
-	// Thought x was fixed???
-  // wire fixed_x;
-  // assign fixed_x = 8'd20;
-  reg speed = 8'd1;
+    reg speed = 8'd1;
 	localparam  S_FALL        = 3'd0,
-              S_FLAP        = 3'd1,
-              S_FLAP_WAIT   = 3'd2;
+                S_FLAP        = 3'd1,
+                S_FLAP_WAIT   = 3'd2;
 
   // Next state logic aka our state table
   always@(*)
@@ -67,13 +54,13 @@ module control(
 		case (current_state)
 			S_FALL: begin
 				// Decrease speed and increase gravity by *2 every clock cycle
-        ld_y = ld_y - speed;
-        speed = speed + speed;
+        		ld_y = ld_y - speed;
+        		speed = speed + speed;
       end
       S_FLAP: begin
 				// Increase gravity every clock cycle by *2
 				// erase current, set new y then draw bird and reset gravit
-				ld_y = ld_y + 6'd4;
+				ld_y = ld_y + 6'd2;
 				speed = 6'd1;
       end
 			S_FLAP_WAIT: begin
