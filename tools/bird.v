@@ -1,25 +1,29 @@
 module Birdy(CLOCK_50, KEY, SW, LEDR);
 
+	// Currently a top module to test with LEDS
 	input CLOCK_50;
-    input [3:0] KEY;
+  input [3:0] KEY;
 	input [17:0] SW;
 	output [17:0] LEDR;
-    //input in_y,
-    //output in_y,
 
-    //wire fixed_x;
-    //assign fixed_x = 8'd20;
 	wire newClock;
 	wire [6:0] toLEDS;
 	assign LEDR[6:0] = toLEDS[6:0];
+	
+	// Following code used to instantiate as a birdy
+  //input in_y,
+  //output in_y,
+	// If x is fixed, create the x coordinate to feed back to high module, or even no x coordinate(not used in calculating y of bird)
+  //wire fixed_x;
+  //assign fixed_x = 8'd20;
 
 	clock clock1(.clock(CLOCK_50), .clk(newClock));
 
 	control c1(
-	 .clk(newClock),
-     .resetn(SW[16]),
-     .go(KEY[1]),
-     .ld_y(toLEDS)
+	  .clk(newClock),
+    .resetn(SW[16]),
+    .go(KEY[1]),
+    .ld_y(toLEDS)
 	);
 
 endmodule
@@ -32,15 +36,17 @@ module control(clk, resetn, go, ld_y);
 	output reg [6:0] ld_y
 
 	reg [2:0] current_state, next_state;
-    reg speed = 8'd1;
-	localparam  S_FALL        = 3'd0,
-                S_FLAP        = 3'd1,
-                S_FLAP_WAIT   = 3'd2;
+  reg speed = 8'd1;
+	localparam  	S_START       = 3'd0,
+								S_FALL 				= 3'd1,
+                S_FLAP        = 3'd2,
+                S_FLAP_WAIT   = 3'd3;
 
   // Next state logic aka our state table
   always@(*)
   begin: state_table
 		case (current_state)
+		  S_START: next_state = go ? S_FALL : S_START;
 			S_FALL: next_state = go ? S_FLAP : S_FALL; // Natural State is bird falling
 			S_FLAP: next_state = go ? S_FLAP_WAIT : S_FALL; // On GO make bird fly 2 pixels
 			S_FLAP_WAIT: next_state = go ? S_FLAP_WAIT : S_FALL; // Makes sure player doesn't hold button to fly up non-stop
@@ -52,6 +58,10 @@ module control(clk, resetn, go, ld_y);
   always @(*)
   begin: enable_signals
 		case (current_state)
+		  S_START: begin
+						ld_y = 6'd3;
+						speed = 8'd1;
+			end
 			S_FALL: begin
 				// Decrease speed and increase gravity by *2 every clock cycle
         		ld_y = ld_y - speed;
@@ -76,33 +86,13 @@ module control(clk, resetn, go, ld_y);
   always@(posedge clk)
   begin: state_FFs
 		if(!resetn)
-			current_state <= S_FALL;
+			current_state <= S_START;
     else
 			current_state <= next_state;
   end // state_FFS
 
 endmodule
 
-module clock(input clock, output clk);
-
-	reg [19:0] frame_counter;
-	reg frame;
-
-	always@(posedge clock)
-	begin
-		if (frame_counter == 20'b00000000000000000000) begin
-			frame_counter = 20'b1011111010111100001000000;
-			frame = 1'b1;
-		end
-  	else begin
-			frame_counter = frame_counter - 1'b1;
-			frame = 1'b0;
-		end
-	end
-
-	assign clk = frame;
-
-endmodule
 	/*
 	Ahmed. Bird.
 	drawfall draws, then fal
