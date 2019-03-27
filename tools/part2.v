@@ -69,7 +69,7 @@ module project(
 		output reg [39:0] forty_bit_out
 		);
 
-		// pushes data_in values all the time. loops. 
+		// pushes data_in values all the time. loops.
 		// so we do not need to do it ourself with SW
 
 		always @(posedge clk)
@@ -180,24 +180,30 @@ module project(
 				DRAW_SEED: begin
 					x = border_x + pixel_counter[3:2] - (3'b100 * bit_counter);
 					y = border_y + pixel_counter[1:0] + (3'b100 * reg_counter);
-					
-					if (obstacle_data[(bit_counter + (6'b101000 * reg_counter))] == 1'b1) colour = 3'b011;
+
+					if (obstacle_data[(bit_counter + (6'b101000 * reg_counter))] == 1'b1)
+							colour = 3'b011;
 					else colour = 3'b000;
-					
+
 					if (pixel_counter == 4'b1111) begin
 						pixel_counter = 4'b0000;
-						bit_counter = bit_counter + 1'b1;
+
+						if (bit_counter == 6'b100111) begin
+								bit_counter = 6'b000000;
+
+								if (reg_counter == 5'b11101) begin
+										reg_counter = 5'b00000;
+								end
+								else reg_counter = reg_counter + 1'b1;
+
+						end
+						else bit_counter = bit_counter + 1'b1;
+
 					end
 					else pixel_counter = pixel_counter + 1'b1;
 
-					if (bit_counter == 6'b101000) begin
-						bit_counter = 6'b000000;
-						reg_counter = reg_counter + 1'b1;
-					end
-
-					if (reg_counter == 5'b11110)
-						reg_counter = 5'b00000;
 				end
+
       endcase
 	end
 
