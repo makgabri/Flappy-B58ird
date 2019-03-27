@@ -1,42 +1,38 @@
-module Birdy(CLOCK_50, KEY, SW, LEDR);
+module Birdy(clock, resetn, go, color, y_out);
 
 	// Currently a top module to test with LEDS
-	input CLOCK_50;
-   input [3:0] KEY;
-	input [17:0] SW;
-	output [17:0] LEDR;
+	input clock;
+    input resetn;
+    input go;
+    output [2:0] color;
+	output [6:0] y_out;
 
-	wire newClock;
-	wire [6:0] toLEDS;
-	assign LEDR[6:0] = toLEDS[6:0];
-	
-	// Following code used to instantiate as a birdy
-  //input in_y,
-  //output in_y,
 	// If x is fixed, create the x coordinate to feed back to high module, or even no x coordinate(not used in calculating y of bird)
-  //wire fixed_x;
-  //assign fixed_x = 8'd20;
+    //wire fixed_x;
+    //assign fixed_x = 8'd20;
 
-	clock clock1(.clock(CLOCK_50), .clk(newClock));
-
+    // Resetn should be 1 to go to next state
 	control c1(
-	  .clk(newClock),
-    .resetn(SW[16]),
-    .go(SW[1]),
-    .ld_y(toLEDS)
+	  .clk(clock),
+    .resetn(resetn),
+    .go(go),
+    .color(color),
+    .ld_y(y_out)
 	);
 
 endmodule
 
-module control(clk, resetn, go, ld_y);
+module control(clk, resetn, go, color, ld_y);
 	input clk;
 	input resetn;
 	input go;
 
+    output reg [2:0] color;
 	output reg [6:0] ld_y;
 
 	reg [2:0] current_state, next_state;
-  reg speed = 7'd1;
+    reg fall = 1'b0;
+    reg speed = 8'd1;
 	localparam  	S_START       = 3'd0,
 								S_FALL 				= 3'd1,
                 S_FLAP        = 3'd2,
@@ -59,23 +55,51 @@ module control(clk, resetn, go, ld_y);
   begin: enable_signals
 		case (current_state)
 		  S_START: begin
-						ld_y = 7'd30;
-						speed = 7'd1;
+						ld_y = 6'd3;
+						speed = 8'd1;
 			end
 			S_FALL: begin
-				// Decrease speed and increase gravity by *2 every clock cycle
-        		ld_y = ld_y - 7'd2;
-        		speed = speed + speed;
+                // Decrease speed and increase gravity by *2 every clock cycle
+                ld_y = ld_y - speed;
+                speed = speed + speed;
+                        counter = 0;
+    
+        if fall == 1'b0:
+            colour = 2'b110;
+            x = bird_x + pixel_counter[3:2];
+            y = ld_y + pixel_counter[1:0];
+            
+            if (pixel_counter == 4'b1111) begin
+                pixel_counter = 4'b0000;
+                fall = true;
+            end
+            else pixel_counter = pixel_counter + 1'b1;
+            
+        // erase and move down 4
+        else if fall == true: 
+            // erase current
+            colour = black;
+            x = bird_x + pixel_counter[3:2];
+            y = ld_y + pixel_counter[1:0];
+            
+            if (pixel_counter == 4'b1111) begin
+                pixel_counter = 4'b0000;
+                ld_y -=4 - speed;
+                speed = speed + speed;
+                fall = false;
+            end
+            else pixel_counter = pixel_counter + 1'b1;
+            
       end
       S_FLAP: begin
 				// Increase gravity every clock cycle by *2
 				// erase current, set new y then draw bird and reset gravit
-				ld_y = ld_y + 7'd2;
-				speed = 7'd1;
+				ld_y = ld_y + 6'd2;
+				speed = 6'd1;
       end
 			S_FLAP_WAIT: begin
 				// Similar to fall state but need this state to prevent holding fly
-				ld_y = ld_y - 7'd2;
+				ld_y = ld_y - speed;
 				speed = speed + speed;
       end
       //default:
@@ -190,23 +214,37 @@ endmodule
 
 	default: initbird
 	*/
-	module clock(input clock, output clk);
-
-	reg [19:0] frame_counter;
-	reg frame;
-
-	always@(posedge clock)
-	begin
-		if (frame_counter == 20'b00000000000000000000) begin
-			frame_counter = 20'b1011111010111100001000000;
-			frame = 1'b1;
-		end
-  	else begin
-			frame_counter = frame_counter - 1'b1;
-			frame = 1'b0;
-		end
-	end
-
-	assign clk = frame;
-
-endmodule
+S_FALL: begin
+                // Decrease speed and increase gravity by *2 every clock cycle
+                ld_y = ld_y - speed;
+                speed = speed + speed;
+                        counter = 0;
+    
+        if fall == false:
+            // draw
+            colour = green;
+            x = bird_x + pixel_counter[3:2];
+            y = ld_y + pixel_counter[1:0];
+            
+            if (pixel_counter == 4'b1111) begin
+                pixel_counter = 4'b0000;
+                fall = true;
+            end
+            else pixel_counter = pixel_counter + 1'b1;
+            
+        // erase and move down 4
+        else if fall == true: 
+            // erase current
+            colour = black;
+            x = bird_x + pixel_counter[3:2];
+            y = ld_y + pixel_counter[1:0];
+            
+            if (pixel_counter == 4'b1111) begin
+                pixel_counter = 4'b0000;
+                ld_y -=4 - speed;
+                speed = speed + speed;
+                fall = false;
+            end
+            else pixel_counter = pixel_counter + 1'b1;
+            
+      end
