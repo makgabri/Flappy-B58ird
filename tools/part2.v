@@ -57,63 +57,44 @@ module project(
 	defparam VGA.BITS_PER_COLOUR_CHANNEL = 1;
 	defparam VGA.BACKGROUND_IMAGE = "black.mif";
 
-	/* Ahmed - 3:20pm monday
-	data_in = {1111000011110000111100001111000011110000};
-
-	module shift_register_40_bit (
-		input clk,
-		input resetn,
-		input data_in,
-
-		output reg bit_out,
-		output reg [39:0] forty_bit_out
-		);
-
-		// pushes data_in values all the time. loops.
-		// so we do not need to do it ourself with SW
-
-		always @(posedge clk)
-		begin
-			if (!resetn) begin
-			bit_out = forty_bit_out[0];
-			// put in the 39th val of data_in all the time
-			forty_bit_out <= {forty_bit_out[38:0], data_in[counter]};
-			if counter == 39
-				counter = 0
-			else
-				counter = counter + 1
-			end
-			else begin
-			bit_out = 1'b0;
-			forty_bit_out <= 40'b0;
-			end
-		end
-
-		endmodule
-	*/
-
+	wire [29:0] data_in;
 	wire [29:0] test_bit_out;
 	wire [1199:0] obstacle_data;
 
-	shift_register_40_bit all_regs[29:0] (
-		.clk(SW[17]),
+	data_in_manager dim(
+		.clk(frame),
+		.dim(data_in),
 		.resetn(SW[16]),
-		.data_in(SW[0]),
+		.led(LEDR[17])
+	);
+	
+	shift_register_40_bit all_regs[29:0] (
+		.clk(frame),
+		.resetn(SW[16]),
+		.data_in(data_in),
 		.bit_out(test_bit_out),
 		.forty_bit_out(obstacle_data)
 	);
 
 	reg [5:0] state;
 	reg [7:0] x, y, feed_increment;
+	reg [1199:0] b;
 	reg [7:0] border_x, border_y;
 	reg [2:0] colour;
-	reg [17:0] drawing, drawing_x;
+	reg [17:0] drawing, drawing_x, x_off;
 	reg [3:0] pixel_counter;
 	reg [5:0] bit_counter;
 	reg [4:0] reg_counter;
 	wire frame;
 
-	assign LEDR[7:0] = test_bit_out[7:0];
+	assign LEDR[0] = obstacle_data[0];
+	assign LEDR[1] = obstacle_data[40];
+	assign LEDR[2] = obstacle_data[80];
+	assign LEDR[3] = obstacle_data[120];
+	assign LEDR[4] = obstacle_data[160];
+	assign LEDR[5] = obstacle_data[200];
+	assign LEDR[6] = obstacle_data[240];
+	assign LEDR[7] = obstacle_data[280];
 
 	localparam  CLEAR_SCREEN = 6'b000000,
               INIT_FLOOR   = 6'b000001,
@@ -170,7 +151,6 @@ module project(
 					else begin
 						drawing= 8'b00000000;
 						drawing_x = 8'b00000000;
-						bit_counter = 6'b000000;
 						border_x = 8'd156;
 					   border_y = 8'd0;
 						state = DRAW_SEED;
@@ -180,29 +160,28 @@ module project(
 				DRAW_SEED: begin
 					x = border_x + pixel_counter[3:2] - (3'b100 * bit_counter);
 					y = border_y + pixel_counter[1:0] + (3'b100 * reg_counter);
-
-					if (obstacle_data[(bit_counter + (6'b101000 * reg_counter))] == 1'b1)
-							colour = 3'b011;
+					
+					b = bit_counter + (reg_counter * 6'b101000);
+					
+					if (obstacle_data[b] == 1'b1) colour = 3'b011;
 					else colour = 3'b000;
 
 					if (pixel_counter == 4'b1111) begin
-						pixel_counter = 4'b0000;
-
-						if (bit_counter == 6'b100111) begin
-								bit_counter = 6'b000000;
-
-								if (reg_counter == 5'b11101) begin
-										reg_counter = 5'b00000;
-								end
-								else reg_counter = reg_counter + 1'b1;
-
-						end
-						else bit_counter = bit_counter + 1'b1;
-
+						pixel_counter = 4'b0;
+						bit_counter = bit_counter + 1'b1;
 					end
 					else pixel_counter = pixel_counter + 1'b1;
 
+					if (bit_counter == 6'b101000) begin
+						bit_counter = 6'b0;
+						reg_counter = reg_counter + 1'b1;
+					end
+					
+					if (reg_counter == 5'b11110) begin
+						reg_counter = 5'b0;
+					end
 				end
+				
 
       endcase
 	end
@@ -236,15 +215,68 @@ module shift_register_40_bit (
 
 endmodule
 
+module data_in_manager(
+	input clk,
+	output reg [29:0] dim,
+	input resetn,
+	output led
+);
+
+reg [2:0] count;
+reg [1:0] jump;
+reg [1:0] pattern;
+
+assign led = (count == 1'b0);
+
+always @(posedge clk)
+begin
+
+	if (resetn) begin
+		count = 3'b0;
+		jump = 2'b0;
+		pattern = 2'b00;
+	end
+	else begin
+
+	if (jump == 1'b0) begin
+		dim = 30'b0;
+		
+		if (count == 1'b0) begin
+			count = 3'b111;
+			jump = 2'b01;
+			
+			if (pattern == 2'b00)
+				dim = 30'b111110000000000111111111111111;
+			else if (pattern == 2'b01)
+				dim = 30'b111111111111111000000000011111;
+			else if (pattern == 2'b10)
+				dim = 30'b111111111100000000001111111111;
+			else if (pattern == 2'b11)
+				dim = 30'b111111111111000000111111111111;
+			if (pattern == 2'b11) pattern = 2'b00;
+			else pattern = pattern + 1'b1;
+			
+		end
+		else count = count - 1'b1;
+		
+	end
+	else jump = jump - 1'b1;
+
+	end
+
+end
+
+endmodule
+
 module clock(input clock, output clk);
 
-	reg [19:0] frame_counter;
+	reg [22:0] frame_counter;
 	reg frame;
 
 	always@(posedge clock)
 	begin
-		if (frame_counter == 20'b00000000000000000000) begin
-			frame_counter = 20'b1011111010111100001000000;
+		if (frame_counter == 23'b0) begin
+			frame_counter = 23'b01111111000000000000000;
 			frame = 1'b1;
 		end
   	else begin
