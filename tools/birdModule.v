@@ -1,48 +1,50 @@
-module Birdy(clock, resetn, go, color, y_out);
+module Birdy(clock, resetn, go, colour, out_x, out_y);
 
-	// Currently a top module to test with LEDS
 	input clock;
     input resetn;
     input go;
-    output [2:0] color;
-	output [6:0] y_out;
-
-	// If x is fixed, create the x coordinate to feed back to high module, or even no x coordinate(not used in calculating y of bird)
-    //wire fixed_x;
-    //assign fixed_x = 8'd20;
+    output [2:0] colour;
+	output [7:0] out_x;
+	output [7:0] out_y;
 
     // Resetn should be 1 to go to next state
 	control c1(
-	  .clk(clock),
+	.clk(clock),
     .resetn(resetn),
     .go(go),
-    .color(color),
-    .ld_y(y_out)
+    .colour(colour),
+	.out_x(out_x),
+    .out_y(out_y)
 	);
 
 endmodule
 
-module control(clk, resetn, go, color, ld_y);
+module control(clk, resetn, go, colour, out_x, out_y);
 	input clk;
 	input resetn;
 	input go;
 
-    output reg [2:0] color;
-	output reg [6:0] ld_y;
+    output reg [2:0] colour;
+	output reg [7:0] out_x;
+	output reg [7:0] out_y;
 
+	reg [7:0] cur_x = 8'd24;
+	reg [7:0] cur_y = 8'd48;
+	reg [7:0] next_y;
 	reg [2:0] current_state, next_state;
-    reg fall = 1'b0;
     reg speed = 8'd1;
+	reg erased = 1'b0;
+	reg [4:0] pixel_counter = 5'b00000;
 	localparam  	S_START       = 3'd0,
-								S_FALL 				= 3'd1,
-                S_FLAP        = 3'd2,
-                S_FLAP_WAIT   = 3'd3;
+					S_FALL 		  = 3'd1,
+                	S_FLAP        = 3'd2,
+                	S_FLAP_WAIT   = 3'd3;
 
   // Next state logic aka our state table
   always@(*)
   begin: state_table
 		case (current_state)
-		  S_START: next_state = go ? S_FALL : S_START;
+		    S_START: next_state = go ? S_FALL : S_START;
 			S_FALL: next_state = go ? S_FLAP : S_FALL; // Natural State is bird falling
 			S_FLAP: next_state = go ? S_FLAP_WAIT : S_FALL; // On GO make bird fly 2 pixels
 			S_FLAP_WAIT: next_state = go ? S_FLAP_WAIT : S_FALL; // Makes sure player doesn't hold button to fly up non-stop
@@ -54,56 +56,117 @@ module control(clk, resetn, go, color, ld_y);
   always @(*)
   begin: enable_signals
 		case (current_state)
-		  S_START: begin
-						ld_y = 6'd3;
-						speed = 8'd1;
+		    S_START: begin // Start with Bird Still
+				colour = 3'b110;
+				if (pixel_counter < 5'b10000) begin
+					out_x = cur_x + pixel_counter[3:2];
+					out_y = cur_y + pixel_counter[1:0];
+					pixel_counter = pixel_counter + 1'b1;
+				end
 			end
-			S_FALL: begin
-                // Decrease speed and increase gravity by *2 every clock cycle
-                ld_y = ld_y - speed;
-                speed = speed + speed;
-                        counter = 0;
-    
-        if fall == 1'b0:
-            colour = 2'b110;
-            x = bird_x + pixel_counter[3:2];
-            y = ld_y + pixel_counter[1:0];
-            
-            if (pixel_counter == 4'b1111) begin
-                pixel_counter = 4'b0000;
-                fall = true;
-            end
-            else pixel_counter = pixel_counter + 1'b1;
-            
-        // erase and move down 4
-        else if fall == true: 
-            // erase current
-            colour = black;
-            x = bird_x + pixel_counter[3:2];
-            y = ld_y + pixel_counter[1:0];
-            
-            if (pixel_counter == 4'b1111) begin
-                pixel_counter = 4'b0000;
-                ld_y -=4 - speed;
-                speed = speed + speed;
-                fall = false;
-            end
-            else pixel_counter = pixel_counter + 1'b1;
-            
-      end
-      S_FLAP: begin
-				// Increase gravity every clock cycle by *2
-				// erase current, set new y then draw bird and reset gravit
-				ld_y = ld_y + 6'd2;
-				speed = 6'd1;
-      end
-			S_FLAP_WAIT: begin
-				// Similar to fall state but need this state to prevent holding fly
-				ld_y = ld_y - speed;
-				speed = speed + speed;
-      end
-      //default:
-    endcase
+			S_FALL: begin // Begin fall
+				if (erased == 1'b0) begin // Erase current bird
+					if (pixel_counter > 5'b00000) begin
+						colour = 3'b000;
+						out_x = cur_x - pixel_counter[3:2];
+						out_y = cur_y - pixel_counter[1:0];
+						pixel_counter = pixel_counter - 1'b1;
+					end
+					else if (pixel_counter == 5'b00000) begin
+						out_x = cur_x;
+						out_y = cur_y;
+						erased = 1'b1;
+						next_y = cur_y + speed;
+						if (next_y > 8'd111) begin
+							cur_y = next_y;
+						end
+						else begin
+							cur_y = 8'd111;
+						end
+						speed = speed + speed;
+					end
+				end
+				else begin // Draw next bird
+					colour = 3'b110;
+					if (pixel_counter < 5'b10000) begin
+						out_x = cur_x + pixel_counter[3:2];
+						out_y = cur_y + pixel_counter[1:0];
+						pixel_counter = pixel_counter + 1'b1;
+					end
+					else begin
+						erased = 1'b0;
+					end
+				end
+			end
+      		S_FLAP: begin // Begin flap
+			  	speed = 8'd1;
+				if (erased == 1'b0) begin // Erase current bird
+					if (pixel_counter > 5'b00000) begin
+						colour = 3'b000;
+						out_x = cur_x - pixel_counter[3:2];
+						out_y = cur_y - pixel_counter[1:0];
+						pixel_counter = pixel_counter - 1'b1;
+					end
+					else if (pixel_counter == 5'b00000) begin
+						out_x = cur_x;
+						out_y = cur_y;
+						erased = 1'b1;
+						next_y = cur_y - 8'd6;
+						if (next_y < 8'd12) begin
+							cur_y = next_y;
+						end
+						else begin
+							cur_y = 8'd12;
+						end
+					end
+				end
+				else begin // Draw next bird
+					colour = 3'b110;
+					if (pixel_counter < 5'b10000) begin
+						out_x = cur_x + pixel_counter[3:2];
+						out_y = cur_y + pixel_counter[1:0];
+						pixel_counter = pixel_counter + 1'b1;
+					end
+					else begin
+						erased = 1'b0;
+					end
+				end
+			end
+			S_FLAP_WAIT: begin // Begin fall - similar to fall
+				if (erased == 1'b0) begin // Erase current bird
+					if (pixel_counter > 5'b00000) begin
+						colour = 3'b000;
+						out_x = cur_x - pixel_counter[3:2];
+						out_y = cur_y - pixel_counter[1:0];
+						pixel_counter = pixel_counter - 1'b1;
+					end
+					else if (pixel_counter == 5'b00000) begin
+						out_x = cur_x;
+						out_y = cur_y;
+						erased = 1'b1;
+						next_y = cur_y + speed;
+						if (next_y > 8'd111) begin
+							cur_y = next_y;
+						end
+						else begin
+							cur_y = 8'd111;
+						end
+						speed = speed + speed;
+					end
+				end
+				else begin // Draw next bird
+					colour = 3'b110;
+					if (pixel_counter < 5'b10000) begin
+						out_x = cur_x + pixel_counter[3:2];
+						out_y = cur_y + pixel_counter[1:0];
+						pixel_counter = pixel_counter + 1'b1;
+					end
+					else begin
+						erased = 1'b0;
+					end
+				end
+			end
+        endcase
   end // enable_signals
 
   // current_state registers
@@ -120,7 +183,7 @@ endmodule
 	/*
 	Ahmed. Bird.
 	drawfall draws, then fal
-				//color = blackls etc
+				//colour = blackls etc
 	drawrise draws, then rises. 3 times. then goes to drawfall/
 
 	default is init, which draws the bird.
@@ -214,37 +277,3 @@ endmodule
 
 	default: initbird
 	*/
-S_FALL: begin
-                // Decrease speed and increase gravity by *2 every clock cycle
-                ld_y = ld_y - speed;
-                speed = speed + speed;
-                        counter = 0;
-    
-        if fall == false:
-            // draw
-            colour = green;
-            x = bird_x + pixel_counter[3:2];
-            y = ld_y + pixel_counter[1:0];
-            
-            if (pixel_counter == 4'b1111) begin
-                pixel_counter = 4'b0000;
-                fall = true;
-            end
-            else pixel_counter = pixel_counter + 1'b1;
-            
-        // erase and move down 4
-        else if fall == true: 
-            // erase current
-            colour = black;
-            x = bird_x + pixel_counter[3:2];
-            y = ld_y + pixel_counter[1:0];
-            
-            if (pixel_counter == 4'b1111) begin
-                pixel_counter = 4'b0000;
-                ld_y -=4 - speed;
-                speed = speed + speed;
-                fall = false;
-            end
-            else pixel_counter = pixel_counter + 1'b1;
-            
-      end
