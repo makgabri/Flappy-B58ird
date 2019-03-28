@@ -125,7 +125,7 @@ module keyboard(
 
   always @(posedge CLOCK_50) begin
     if (CODEWORD == SPACE) begin
-      KEY_PRESSED <= 5'd16;
+      KEY_PRESSED <= 1'b1;
     end
   end
 
