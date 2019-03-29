@@ -84,6 +84,18 @@ every bit to the screen in the proper position. Work done on the bird module,
 but ran into difficulties with other sub-modules like the rate divider. Will
 try to come to extra lab hours to catch up.
 
+Week 3:
+All members went to extra lab hours, but our main issues were still unresolved
+after much effort. During our actual lab time we are finally able to draw pipes
+to the screen correctly and have control over the thickness, speed, space
+between them, and pattern. Main issue preventing us from doing so before was
+discovered to be a behaviour of Verilog we didn't know about. Work also done on
+the Bird module, but some issues arise with its current design. We have an idea
+on a quick re-work of the module so we can at least put it together with our
+pipes. We also have looked at a previous project to see how to use keyboard
+controls, and believe we can incorporate that quickly as well. Hopefully able
+to do some sort of collision detection.
+
 
 References
 -------------
