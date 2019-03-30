@@ -67,7 +67,7 @@ module project(
 		.resetn(SW[16]),
 		.led(LEDR[17])
 	);
-	
+
 	shift_register_40_bit all_regs[29:0] (
 		.clk(frame),
 		.resetn(SW[16]),
@@ -160,9 +160,9 @@ module project(
 				DRAW_SEED: begin
 					x = border_x + pixel_counter[3:2] - (3'b100 * bit_counter);
 					y = border_y + pixel_counter[1:0] + (3'b100 * reg_counter);
-					
+
 					b = bit_counter + (reg_counter * 6'b101000);
-					
+
 					if (obstacle_data[b] == 1'b1) colour = 3'b011;
 					else colour = 3'b000;
 
@@ -176,12 +176,12 @@ module project(
 						bit_counter = 6'b0;
 						reg_counter = reg_counter + 1'b1;
 					end
-					
+
 					if (reg_counter == 5'b11110) begin
 						reg_counter = 5'b0;
 					end
 				end
-				
+
 
       endcase
 	end
@@ -240,11 +240,11 @@ begin
 
 	if (jump == 1'b0) begin
 		dim = 30'b0;
-		
+
 		if (count == 1'b0) begin
 			count = 3'b111;
 			jump = 2'b01;
-			
+
 			if (pattern == 2'b00)
 				dim = 30'b111110000000000111111111111111;
 			else if (pattern == 2'b01)
@@ -255,10 +255,10 @@ begin
 				dim = 30'b111111111111000000111111111111;
 			if (pattern == 2'b11) pattern = 2'b00;
 			else pattern = pattern + 1'b1;
-			
+
 		end
 		else count = count - 1'b1;
-		
+
 	end
 	else jump = jump - 1'b1;
 
