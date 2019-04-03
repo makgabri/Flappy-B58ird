@@ -85,7 +85,12 @@ module project(
 	reg [3:0] pixel_counter;
 	reg [5:0] bit_counter;
 	reg [4:0] reg_counter;
+	reg [7:0] birdx, birdy, gravity;
+	reg [10:0] nexty;
+	reg [2:0] bird_status, jump;
 	wire frame;
+
+	assign jump = {2'b00, ~KEY[0]};
 
 	assign LEDR[0] = obstacle_data[0];
 	assign LEDR[1] = obstacle_data[40];
@@ -99,8 +104,9 @@ module project(
 	localparam  CLEAR_SCREEN = 6'b000000,
               INIT_FLOOR   = 6'b000001,
 							INIT_CIELING = 6'b000010,
+							START_SCREEN = 6'b001000,
 							DRAW_SEED 	 = 6'b000011,
-					 		DRAW_PIXEL   = 6'b011001;
+					 		DRAW_BIRD   = 6'b011001;
 
 	clock(.clock(CLOCK_50), .clk(frame));
 
@@ -108,6 +114,11 @@ module project(
 	begin
 		colour = 3'b000;
 		feed_increment = 8'b00000000;
+		birdx = 8'b00010100;
+		birdy = 8'b00110000;
+		bird_status = 3'b000;
+		nexty = 10'b0000000000;
+		gravity = 8'b00000001;
 		x = 8'b00000000;
 		y = 8'b00000000;
 		if (~KEY[0]) state = CLEAR_SCREEN;
@@ -154,11 +165,27 @@ module project(
 						border_x = 8'd156;
 					   border_y = 8'd0;
 						state = DRAW_SEED;
+						// state = START_SCREEN;
 					end
 				end
 
+				START_SCREEN: begin
+					colour = 3'b110;
+					x = birdx + pixel_counter[3:2];
+					y = birdy + pixel_counter[1:0];
+					if (pixel_counter == 4'b1111) begin
+						bird_status = 3'b001;
+					end
+					else pixel_counter = pixel_counter + 1'b1;
+					if (bird_status == 3'b001) begin
+						if (jump == 3'b001) begin
+							pixel_counter = 4'b0;
+							state = DRAW_SEED;
+						end
+					end
+				end
                 // Add Start screen state here, Ceiling and Floor exist but no pipes, maybe draw bird's first
-                // state here. Meaning we draw the fixed bird here
+                // state here. Meaning we draw the fixed bird here and move to next state on "go"
                 // Have time? Draw "Press x to start".
 
 				DRAW_SEED: begin
@@ -183,8 +210,64 @@ module project(
 
 					if (reg_counter == 5'b11110) begin
 						reg_counter = 5'b0;
+					// After every pipe is finished drawing, draw bird's next state
+					// Add this where appropriate
+					// state = DRAW_BIRD
 					end
-                    // After every pipe is finished drawing, draw bird's next state
+				end
+
+				DRAW_BIRD: begin
+					if (bird_status == 3'b001) begin // erase before fall
+						colour = 3'b000;
+						x = birdx + pixel_counter[3:2];
+						y = birdy + pixel_counter[1:0];
+						if (pixel_counter == 4'b1111) begin
+							bird_status = 3'b010;
+							nexty = birdy + gravity;
+							if (nexty > 10'b0001101110) begin
+								birdy = 8'b01101101;
+							end
+							else birdy = nexty;
+						end
+						else pixel_counter = pixel_counter + 1'b1;
+					end
+					else if (bird_status = 3'b010) begin // draw for drop
+						colour = 3'b110;
+						x = birdx + pixel_counter[3:2];
+						y = birdy + pixel_counter[1:0];
+						if (pixel_counter == 4'b1111) begin
+							bird_status = 3'b001;
+							state = DRAW_SEED
+						end
+						else pixel_counter = pixel_counter + 1'b1;
+					end
+					else if (bird_status == 3'b011) begin // erase before jump
+						colour = 3'b000;
+						x = birdx + pixel_counter[3:2];
+						y = birdy + pixel_counter[1:0];
+						if (pixel_counter == 4'b1111) begin
+							bird_status = 3'b100;
+							nexty = birdy - 8'00000011;
+							if (nexty < 8'b00001110) begin
+								birdy = 8'b00001110;
+							end
+							else birdy = nexty;
+						end
+						else pixel_counter = pixel_counter + 1'b1;
+					end
+					else if (bird_status == 3'b100) begin // draw for jump
+						colour = 3'b110;
+						x = birdx + pixel_counter[3:2];
+						y = birdy + pixel_counter[1:0];
+						if (pixel_counter == 4'b1111) begin
+							bird_status = 3'b001;
+							state = DRAW_SEED
+						end
+						else pixel_counter = pixel_counter + 1'b1;
+					end
+					if (jump == 3'b001) begin
+						bird_status = 3'b011;
+					end
 				end
 
                 // Bird's next state here, simplified, can copy some code from birdModule.v for drawing and
