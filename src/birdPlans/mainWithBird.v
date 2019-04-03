@@ -87,10 +87,11 @@ module project(
 	reg [4:0] reg_counter;
 	reg [7:0] birdx, birdy, gravity;
 	reg [10:0] nexty;
-	reg [2:0] bird_status, jump;
+	reg [2:0] bird_status;
+	wire jump;
 	wire frame;
 
-	assign jump = {2'b00, ~KEY[0]};
+	assign jump = ~KEY[0];
 
 	assign LEDR[0] = obstacle_data[0];
 	assign LEDR[1] = obstacle_data[40];
@@ -231,13 +232,13 @@ module project(
 						end
 						else pixel_counter = pixel_counter + 1'b1;
 					end
-					else if (bird_status = 3'b010) begin // draw for drop
+					else if (bird_status == 3'b010) begin // draw for drop
 						colour = 3'b110;
 						x = birdx + pixel_counter[3:2];
 						y = birdy + pixel_counter[1:0];
 						if (pixel_counter == 4'b1111) begin
 							bird_status = 3'b001;
-							state = DRAW_SEED
+							state = DRAW_SEED;
 						end
 						else pixel_counter = pixel_counter + 1'b1;
 					end
@@ -247,7 +248,7 @@ module project(
 						y = birdy + pixel_counter[1:0];
 						if (pixel_counter == 4'b1111) begin
 							bird_status = 3'b100;
-							nexty = birdy - 8'00000011;
+							nexty = birdy - 8'b00000011;
 							if (nexty < 8'b00001110) begin
 								birdy = 8'b00001110;
 							end
@@ -261,7 +262,7 @@ module project(
 						y = birdy + pixel_counter[1:0];
 						if (pixel_counter == 4'b1111) begin
 							bird_status = 3'b001;
-							state = DRAW_SEED
+							state = DRAW_SEED;
 						end
 						else pixel_counter = pixel_counter + 1'b1;
 					end
