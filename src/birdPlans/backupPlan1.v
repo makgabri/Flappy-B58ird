@@ -3,10 +3,11 @@
 module project(
 		CLOCK_50,						//	On Board 50 MHz
 		// Your inputs and outputs here
-        KEY,
+    KEY,
 		LEDR,
 		SW,
-        PS2_KBCLK, PS2_KBDAT,
+		HEX0,
+		HEX1,
 		// The ports below are for the VGA output.  Do not change.
 		VGA_CLK,   					//	VGA Clock
 		VGA_HS,							//	VGA H_SYNC
@@ -18,9 +19,8 @@ module project(
 		VGA_B   						//	VGA Blue[9:0]
 	);
 	input 	[17:0] SW;
-	input	CLOCK_50;			//	50 MHz
+	input		CLOCK_50;			//	50 MHz
 	input 	[3:0] KEY;
-    input   PS2_KBCLK, PS2_KBDAT;
 	output 	[17:0] LEDR;
 
 	// Declare your inputs and outputs here
@@ -62,47 +62,50 @@ module project(
 	wire [29:0] data_in;
 	wire [29:0] test_bit_out;
 	wire [1199:0] obstacle_data;
-    wire KEY_PRESSED;
-
+    output [6:0] HEX0;
+    output [6:0] HEX1;
+    hex_display h0(
+              .IN(score[3:0]),
+              .OUT(HEX0)
+              );
+    hex_display h1(
+              .IN(score[7:4]),
+              .OUT(HEX1)
+              );
+				  
 	data_in_manager dim(
 		.clk(frame),
 		.dim(data_in),
-		.resetn(SW[16]),
+		.resetn(hardreset),
 		.led(LEDR[17])
 	);
 
 	shift_register_40_bit all_regs[29:0] (
 		.clk(frame),
-		.resetn(SW[16]),
+		.resetn(hardreset),
 		.data_in(data_in),
 		.bit_out(test_bit_out),
 		.forty_bit_out(obstacle_data)
 	);
 
-    keyboard keyboard1(
-        .CLOCK_50(CLOCK_50),
-        .PS2_KBCLK(PS2_KBCLK),
-        .PS2_KBDAT(PS2_KBDAT),
-        .KEY_PRESSED(KEY_PRESSED)
-    );
-
 	reg [5:0] state;
-	reg [7:0] x, y, feed_increment;
+	reg [7:0] x, y, feed_increment, birdx, birdy;
 	reg [1199:0] b;
-	reg [7:0] border_x, border_y;
+	reg [7:0] border_x, border_y, score;
 	reg [2:0] colour;
 	reg [17:0] drawing, drawing_x, x_off;
 	reg [3:0] pixel_counter;
 	reg [5:0] bit_counter;
 	reg [4:0] reg_counter;
-	reg [7:0] birdx, birdy;
-	reg [2:0] bird_status;
-    reg drawn;
-	wire jump;
+	reg [7:0] bird_counter;
+	reg hardreset;
+	wire jump, start;
 	wire frame;
-
-	assign jump = KEY_PRESSED;
-
+	
+	
+	assign jump = SW[1];
+	assign start = ~KEY[3];
+	
 	assign LEDR[0] = obstacle_data[0];
 	assign LEDR[1] = obstacle_data[40];
 	assign LEDR[2] = obstacle_data[80];
@@ -115,7 +118,7 @@ module project(
 	localparam  CLEAR_SCREEN = 6'b000000,
               INIT_FLOOR   = 6'b000001,
 							INIT_CIELING = 6'b000010,
-							START_SCREEN = 6'b001000,
+							START_SCREEN = 6'b011000,
 							DRAW_SEED 	 = 6'b000011,
 					 		DRAW_BIRD   = 6'b011001;
 
@@ -125,9 +128,6 @@ module project(
 	begin
 		colour = 3'b000;
 		feed_increment = 8'b00000000;
-		birdx = 8'b00010100;
-		birdy = 8'b00110000;
-        drawn = 1'b0;
 		x = 8'b00000000;
 		y = 8'b00000000;
 		if (~KEY[0]) state = CLEAR_SCREEN;
@@ -172,32 +172,46 @@ module project(
 						drawing= 8'b00000000;
 						drawing_x = 8'b00000000;
 						border_x = 8'd156;
+							if (birdy > 7'b1101110) birdy = 8'b01101110;
+							else birdy = birdy + 8'b00000001;
 					   border_y = 8'd0;
-						state = DRAW_SEED;
-						// state = START_SCREEN;
+						state = START_SCREEN;
 					end
 				end
-
+				
 				START_SCREEN: begin
 					colour = 3'b110;
+					birdx = 8'b00010100;
+					 score = 8'b00000000;
+					birdy = 8'b00110000;
+					bird_counter = 8'b00000000;
 					x = birdx;
 					y = birdy;
-                    if (jump == 1'b1) begin
-                        state = DRAW_SEED;
-                    end
-                    drawn = 1'b1;
+               if (start == 1'b1) begin
+						drawing= 8'b00000000;
+						drawing_x = 8'b00000000;
+						border_x = 8'd156;
+					   border_y = 8'd0;
+                state = DRAW_SEED;
+				end
 				end
 
 				DRAW_SEED: begin
+					hardreset = 1'b0;
 					x = border_x + pixel_counter[3:2] - (3'b100 * bit_counter);
 					y = border_y + pixel_counter[1:0] + (3'b100 * reg_counter);
-                    if (y == birdy) begin
-                        state = CLEAR_SCREEN;
-                    end
 
 					b = bit_counter + (reg_counter * 6'b101000);
 
-					if (obstacle_data[b] == 1'b1) colour = 3'b011;
+					if (obstacle_data[b] == 1'b1) begin
+						colour = 3'b011;
+						if (x == birdx) begin
+							if (y == birdy) begin
+								hardreset = 1'b1;
+								state = CLEAR_SCREEN;
+							end
+						end
+					end
 					else colour = 3'b000;
 
 					if (pixel_counter == 4'b1111) begin
@@ -213,39 +227,31 @@ module project(
 
 					if (reg_counter == 5'b11110) begin
 						reg_counter = 5'b0;
-					// After every pipe is finished drawing, draw bird's next state
-					// Add this where appropriate
-					// state = DRAW_BIRD
+						state = DRAW_BIRD;
 					end
 				end
-
+				
 				DRAW_BIRD: begin
-                    if (drawn == 1'b1) begin
-					    colour = 3'b000; // erase bird
-					    x = birdx;
-					    y = birdy;
-                        if (jump == 1'b0) begin
-						    if (y == 8'b01101101) begin
-								birdy = 8'b01101101;
-							end
-						    else birdy = y + 8'b00000001;
+					if (bird_counter == 6'b111111) begin
+			score = score + 1'b1;
+                   if (jump == 1'b0) begin
+							if (birdy > 7'b1101110) birdy = 7'b1101110;
+							else birdy = birdy + 7'b0000001;
 					    end
-					    else if (jump == 1'b1) begin
-						    if (nexty == 8'b00001011) begin
-								birdy = 8'b00001011;
-						    end
-						    else birdy = y - 8'b00000001;;
-					    end
-                        drawn = 1'b0;
-                    end
-                    else if (drawn == 1'b0) begin
+					    else begin
+							if (birdy < 3'b111) birdy = 3'b111;
+							else birdy = birdy - 7'b0000001;
+						 end
+						 bird_counter = 6'b000000;
+					end
+					else bird_counter = bird_counter + 1'b1;
 					    colour = 3'b110;
 					    x = birdx;
 					    y = birdy;
-                        drawn = 1'b1;
 					    state = DRAW_SEED;
-                    end
 				end
+
+
       endcase
 	end
 
@@ -307,7 +313,6 @@ begin
 		if (count == 1'b0) begin
 			count = 3'b111;
 			jump = 2'b01;
-
 			if (pattern == 2'b00)
 				dim = 30'b111110000000000111111111111111;
 			else if (pattern == 2'b01)
@@ -350,4 +355,33 @@ module clock(input clock, output clk);
 
 	assign clk = frame;
 
+endmodule
+
+module hex_display(IN, OUT);
+  input [3:0] IN;
+  output reg [7:0] OUT;
+
+  always @(*)
+  begin
+    case(IN[3:0])
+      4'b0000: OUT = 7'b1000000;
+      4'b0001: OUT = 7'b1111001;
+      4'b0010: OUT = 7'b0100100;
+      4'b0011: OUT = 7'b0110000;
+      4'b0100: OUT = 7'b0011001;
+      4'b0101: OUT = 7'b0010010;
+      4'b0110: OUT = 7'b0000010;
+      4'b0111: OUT = 7'b1111000;
+      4'b1000: OUT = 7'b0000000;
+      4'b1001: OUT = 7'b0011000;
+      4'b1010: OUT = 7'b0001000;
+      4'b1011: OUT = 7'b0000011;
+      4'b1100: OUT = 7'b1000110;
+      4'b1101: OUT = 7'b0100001;
+      4'b1110: OUT = 7'b0000110;
+      4'b1111: OUT = 7'b0001110;
+
+      default: OUT = 7'b0111111;
+    endcase
+  end
 endmodule
