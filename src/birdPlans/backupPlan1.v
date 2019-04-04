@@ -3,9 +3,10 @@
 module project(
 		CLOCK_50,						//	On Board 50 MHz
 		// Your inputs and outputs here
-    KEY,
+        KEY,
 		LEDR,
 		SW,
+        PS2_KBCLK, PS2_KBDAT,
 		// The ports below are for the VGA output.  Do not change.
 		VGA_CLK,   					//	VGA Clock
 		VGA_HS,							//	VGA H_SYNC
@@ -17,8 +18,9 @@ module project(
 		VGA_B   						//	VGA Blue[9:0]
 	);
 	input 	[17:0] SW;
-	input		CLOCK_50;			//	50 MHz
+	input	CLOCK_50;			//	50 MHz
 	input 	[3:0] KEY;
+    input   PS2_KBCLK, PS2_KBDAT;
 	output 	[17:0] LEDR;
 
 	// Declare your inputs and outputs here
@@ -60,6 +62,7 @@ module project(
 	wire [29:0] data_in;
 	wire [29:0] test_bit_out;
 	wire [1199:0] obstacle_data;
+    wire KEY_PRESSED;
 
 	data_in_manager dim(
 		.clk(frame),
@@ -76,6 +79,13 @@ module project(
 		.forty_bit_out(obstacle_data)
 	);
 
+    keyboard keyboard1(
+        .CLOCK_50(CLOCK_50),
+        .PS2_KBCLK(PS2_KBCLK),
+        .PS2_KBDAT(PS2_KBDAT),
+        .KEY_PRESSED(KEY_PRESSED)
+    );
+
 	reg [5:0] state;
 	reg [7:0] x, y, feed_increment;
 	reg [1199:0] b;
@@ -85,13 +95,13 @@ module project(
 	reg [3:0] pixel_counter;
 	reg [5:0] bit_counter;
 	reg [4:0] reg_counter;
-	reg [7:0] birdx, birdy, gravity;
-	reg [10:0] nexty;
+	reg [7:0] birdx, birdy;
 	reg [2:0] bird_status;
+    reg drawn;
 	wire jump;
 	wire frame;
 
-	assign jump = ~KEY[0];
+	assign jump = KEY_PRESSED;
 
 	assign LEDR[0] = obstacle_data[0];
 	assign LEDR[1] = obstacle_data[40];
@@ -117,9 +127,7 @@ module project(
 		feed_increment = 8'b00000000;
 		birdx = 8'b00010100;
 		birdy = 8'b00110000;
-		bird_status = 3'b000;
-		nexty = 10'b0000000000;
-		gravity = 8'b00000001;
+        drawn = 1'b0;
 		x = 8'b00000000;
 		y = 8'b00000000;
 		if (~KEY[0]) state = CLEAR_SCREEN;
@@ -172,29 +180,20 @@ module project(
 
 				START_SCREEN: begin
 					colour = 3'b110;
-					x = birdx + pixel_counter[3:2];
-					y = birdy + pixel_counter[1:0];
-					if (pixel_counter == 4'b1111) begin
-						bird_status = 3'b001;
-					end
-					else pixel_counter = pixel_counter + 1'b1;
-					if (bird_status == 3'b001) begin
-						if (jump == 1'b1) begin
-							pixel_counter = 4'b0;
-							state = DRAW_SEED;
-						end
-					end
+					x = birdx;
+					y = birdy;
+                    if (jump == 1'b1) begin
+                        state = DRAW_SEED;
+                    end
+                    drawn = 1'b1;
 				end
-                // Add Start screen state here, Ceiling and Floor exist but no pipes, maybe draw bird's first
-                // state here. Meaning we draw the fixed bird here and move to next state on "go"
-                // Have time? Draw "Press x to start".
 
 				DRAW_SEED: begin
 					x = border_x + pixel_counter[3:2] - (3'b100 * bit_counter);
 					y = border_y + pixel_counter[1:0] + (3'b100 * reg_counter);
-					if (y == birdy) begin
-						state = CLEAR_SCREEN;
-					end
+                    if (y == birdy) begin
+                        state = CLEAR_SCREEN;
+                    end
 
 					b = bit_counter + (reg_counter * 6'b101000);
 
@@ -221,57 +220,31 @@ module project(
 				end
 
 				DRAW_BIRD: begin
-					if (bird_status == 3'b001) begin // erase before fall
-						colour = 3'b000;
-						x = birdx + pixel_counter[3:2];
-						y = birdy + pixel_counter[1:0];
-						if (pixel_counter == 4'b1111) begin
-							bird_status = 3'b010;
-							nexty = birdy + gravity;
-							if (nexty > 10'b0001101110) begin
+                    if (drawn == 1'b1) begin
+					    colour = 3'b000; // erase bird
+					    x = birdx;
+					    y = birdy;
+                        if (jump == 1'b0) begin
+						    if (y == 8'b01101101) begin
 								birdy = 8'b01101101;
 							end
-							else birdy = nexty;
-						end
-						else pixel_counter = pixel_counter + 1'b1;
-					end
-					else if (bird_status == 3'b010) begin // draw for drop
-						colour = 3'b110;
-						x = birdx + pixel_counter[3:2];
-						y = birdy + pixel_counter[1:0];
-						if (pixel_counter == 4'b1111) begin
-							bird_status = 3'b001;
-							state = DRAW_SEED;
-						end
-						else pixel_counter = pixel_counter + 1'b1;
-					end
-					else if (bird_status == 3'b011) begin // erase before jump
-						colour = 3'b000;
-						x = birdx + pixel_counter[3:2];
-						y = birdy + pixel_counter[1:0];
-						if (pixel_counter == 4'b1111) begin
-							bird_status = 3'b100;
-							nexty = birdy - 8'b00000011;
-							if (nexty < 8'b00001110) begin
-								birdy = 8'b00001110;
-							end
-							else birdy = nexty;
-						end
-						else pixel_counter = pixel_counter + 1'b1;
-					end
-					else if (bird_status == 3'b100) begin // draw for jump
-						colour = 3'b110;
-						x = birdx + pixel_counter[3:2];
-						y = birdy + pixel_counter[1:0];
-						if (pixel_counter == 4'b1111) begin
-							bird_status = 3'b001;
-							state = DRAW_SEED;
-						end
-						else pixel_counter = pixel_counter + 1'b1;
-					end
-					if (jump == 1'b1) begin
-						bird_status = 3'b011;
-					end
+						    else birdy = y + 8'b00000001;
+					    end
+					    else if (jump == 1'b1) begin
+						    if (nexty == 8'b00001011) begin
+								birdy = 8'b00001011;
+						    end
+						    else birdy = y - 8'b00000001;;
+					    end
+                        drawn = 1'b0;
+                    end
+                    else if (drawn == 1'b0) begin
+					    colour = 3'b110;
+					    x = birdx;
+					    y = birdy;
+                        drawn = 1'b1;
+					    state = DRAW_SEED;
+                    end
 				end
       endcase
 	end

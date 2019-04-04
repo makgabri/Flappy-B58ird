@@ -10,7 +10,7 @@ module keyboard(
     input CLOCK_50,
     input PS2_KBCLK,
     input PS2_KBDAT,
-    output reg [1:0] KEY_PRESSED
+    output reg KEY_PRESSED
    );
 
 
