@@ -96,6 +96,17 @@ pipes. We also have looked at a previous project to see how to use keyboard
 controls, and believe we can incorporate that quickly as well. Hopefully able
 to do some sort of collision detection.
 
+Week 4:
+Implemented the bird's movement straight into the main module using a very
+basic design that already fit into our existing FSM. Able to draw the bird on
+screen with the pipes and control it's movement up and down. Able to detect
+collision between the bird and a pipe, and are able to restart the game after
+doing so. Score feature implemented more so as a "time spent" counter rather
+than pipes passed. Bird is able to fall faster than it rises, however the game
+still plays if the bird is on the ground, and upwards movement is continuous
+while the appropriate signal stays on (more like a glide upwards, rather than
+constant flapping and requiring the signal to be reset). Video demonstrating
+the project was recorded.
 
 References
 -------------
@@ -111,5 +122,5 @@ you work with a previous project. What is it that YOU added?>
 
 Repo & Video
 -------------
-<At the end of the project, provide links to your code repository and
-presentation video (and passwords if not public)>
+Repo: https://github.com/Alxander64/Flappy-B58ird
+Video: https://drive.google.com/file/d/1hpMvGEZCy9xnba5RWzjniY5eB4eL04Yi/view?usp=sharing
