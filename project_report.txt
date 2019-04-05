@@ -110,14 +110,10 @@ the project was recorded.
 
 References
 -------------
-<In this space clearly indicate all external sources used in this project. If
-you used anyone else's code (from previous B58 projects or other sources)
-clearly indicate what you used and where you found it. Usage of any material
-not credited in this space will be considered plagiarism. It is absolutely OK
-and expected to update this section as you progress in the projected.
+Source: https://github.com/julesyan/CSCB58-Final-Project/blob/master/project.v
+Simple clock module used from above source to regulate frame rate.
 
-Make sure to document what you added on top of the existing work, especially if
-you work with a previous project. What is it that YOU added?>
+Hex display module used from lab 2.
 
 
 Repo & Video
