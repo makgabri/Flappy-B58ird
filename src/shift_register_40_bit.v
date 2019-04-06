@@ -1,9 +1,9 @@
-module shift_register_40_bit(
+module shift_register_40_bit (
   input clk,
   input resetn,
   input data_in,
 
-  output bit_out,
+  output reg bit_out,
   output reg [39:0] forty_bit_out
   );
 

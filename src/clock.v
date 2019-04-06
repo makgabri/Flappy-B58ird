@@ -1,12 +1,12 @@
 module clock(input clock, output clk);
 
-	reg [19:0] frame_counter;
+	reg [22:0] frame_counter;
 	reg frame;
 
 	always@(posedge clock)
 	begin
-		if (frame_counter == 20'b00000000000000000000) begin
-			frame_counter = 20'b1011111010111100001000000;
+		if (frame_counter == 23'b0) begin
+			frame_counter = 23'b01111111000000000000000;
 			frame = 1'b1;
 		end
   	else begin
