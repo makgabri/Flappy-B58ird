@@ -129,6 +129,7 @@ module project(
 				end
 		  end
 
+			// Green bar across the bottom of the start screen
     	INIT_FLOOR: begin
 				if (drawing < 8'b10100000) begin
 					border_x = 8'd0;
@@ -144,6 +145,7 @@ module project(
 				end
 			end
 
+			// Green bar across the top of the start screen
 			INIT_CIELING: begin
 				if (drawing < 8'b10100000) begin
 					border_x = 8'd0;
@@ -164,6 +166,7 @@ module project(
 				end
 			end
 
+			// Reset Score and Bird coordinates
 			START_SCREEN: begin
 				colour = 3'b110;
 				birdx = 8'b00010100;
@@ -181,6 +184,7 @@ module project(
 				end
 			end
 
+			// Draw pipes, detect if bird has collided with a pipe
 			DRAW_SEED: begin
 				hardreset = 1'b0;
 				x = border_x + pixel_counter[3:2] - (3'b100 * bit_counter);
@@ -216,6 +220,7 @@ module project(
 				end
 			end
 
+			// Bird movement and drawing, increment score
 			DRAW_BIRD: begin
 				if (bird_counter == 6'b111111) begin
 					score = score + 1'b1;
