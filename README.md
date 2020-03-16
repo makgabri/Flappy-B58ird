@@ -2,4 +2,4 @@
 
 **Alexander Ursu, Ahmed Sirajuddin, Gabrian Mak, Kelson Xie**
 
-Flappy Bird on an FPGA with Verilog. Final Project for CSCB58.
+Final group project for CSCB58: Computer Organization at UofT. Flappy Bird on an FPGA with Verilog.
